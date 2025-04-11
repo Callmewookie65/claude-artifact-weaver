@@ -1,84 +1,59 @@
 
-import { useState, useCallback } from "react";
+import { useState, useEffect } from "react";
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast";
 
-type ToastProps = {
+// Define the shape of toast props we'll store
+export type ToasterToast = ToastProps & {
   id: string;
-  title?: string;
-  description?: string;
-  action?: React.ReactNode;
-  variant?: "default" | "destructive";
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  action?: ToastActionElement;
 };
 
-export function useToast() {
-  const [toasts, setToasts] = useState<ToastProps[]>([]);
+// Define an empty function as a placeholder for toast
+let toastFunction: (props: Omit<ToasterToast, "id">) => void = () => {};
 
-  const toast = useCallback(({
-    title,
-    description,
-    action,
-    variant = "default",
-  }: Omit<ToastProps, "id">) => {
-    const id = Math.random().toString(36).slice(2, 11);
+// This function will be called by the Toaster component to set the toastFunction
+export function setToastHandler(fn: (props: Omit<ToasterToast, "id">) => void) {
+  toastFunction = fn;
+}
+
+// The actual toast function that can be imported and used anywhere
+export function toast(props: Omit<ToasterToast, "id">) {
+  toastFunction(props);
+}
+
+// The useToast hook to be used within React components
+export const useToast = () => {
+  const [toasts, setToasts] = useState<ToasterToast[]>([]);
+
+  const addToast = ({ ...props }: Omit<ToasterToast, "id">) => {
+    // Create a unique id for this toast
+    const id = Math.random().toString(36).substring(2, 9);
     
-    setToasts((toasts) => [
-      ...toasts,
-      { id, title, description, action, variant },
-    ]);
+    // Add the toast to state
+    setToasts((prev) => [...prev, { id, ...props }]);
+    
+    // Return the toast id
+    return id;
+  };
 
-    return {
-      id,
-      dismiss: () => dismissToast(id),
-      update: (props: Omit<ToastProps, "id">) => updateToast(id, props),
-    };
+  const dismissToast = (id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  };
+
+  // Register the toast function when the component using this hook mounts
+  useEffect(() => {
+    setToastHandler(addToast);
+    return () => setToastHandler(() => {});
   }, []);
-
-  function dismissToast(id: string) {
-    setToasts((toasts) => toasts.filter((toast) => toast.id !== id));
-  }
-
-  function updateToast(id: string, props: Omit<ToastProps, "id">) {
-    setToasts((toasts) =>
-      toasts.map((toast) =>
-        toast.id === id ? { ...toast, ...props } : toast
-      )
-    );
-  }
 
   return {
     toasts,
-    toast,
+    toast: addToast,
     dismissToast,
   };
-}
-
-// Create a toast function that can be used without the hook
-// Using a new approach that doesn't cause the "useState" outside of component error
-let toastFn: (props: Omit<ToastProps, "id">) => {
-  id: string;
-  dismiss: () => void;
-  update: (props: Omit<ToastProps, "id">) => void;
 };
-
-// This is a mutable object we can use to store our toast handler
-const handlers = {
-  toast: (props: Omit<ToastProps, "id">) => {
-    if (!toastFn) {
-      console.warn(
-        "Toast handler not mounted. Toast messages won't appear until the <Toaster /> component is mounted."
-      );
-      return {
-        id: "dummy-id",
-        dismiss: () => {},
-        update: () => {},
-      };
-    }
-    return toastFn(props);
-  },
-};
-
-// This gets called inside the Toaster component
-export function setToastHandler(fn: typeof toastFn) {
-  toastFn = fn;
-}
-
-export const toast = handlers.toast;
