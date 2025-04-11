@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,9 +8,22 @@ import { Badge } from '@/components/ui/badge';
 import { AlertTriangle } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 
+type Risk = {
+  id: string;
+  title: string;
+  description: string;
+  impact: string;
+  probability: string;
+  status: string;
+  mitigationPlan: string;
+  project: string;
+  createdBy: string;
+  createdAt: string;
+};
+
 export default function RisksPage() {
   // Sample risk data
-  const initialRisks = [
+  const initialRisks: Risk[] = [
     {
       id: '1',
       title: 'Opóźnienia w dostarczaniu treści',
@@ -86,9 +98,9 @@ export default function RisksPage() {
     }
   ];
 
-  const [risks, setRisks] = useState(initialRisks);
+  const [risks, setRisks] = useState<Risk[]>(initialRisks);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentRisk, setCurrentRisk] = useState(null);
+  const [currentRisk, setCurrentRisk] = useState<Risk | null>(null);
   const [filterImpact, setFilterImpact] = useState('all');
   const [filterProbability, setFilterProbability] = useState('all');
   const [filterStatus, setFilterStatus] = useState('all');
@@ -100,7 +112,7 @@ export default function RisksPage() {
   const projects = [...new Set(risks.map(risk => risk.project))];
   
   // Open risk modal for editing or creating
-  const openRiskModal = (risk = null) => {
+  const openRiskModal = (risk: Risk | null = null) => {
     setCurrentRisk(risk);
     setIsModalOpen(true);
   };
@@ -112,20 +124,20 @@ export default function RisksPage() {
   };
 
   // Save risk (create or update)
-  const saveRisk = (e) => {
+  const saveRisk = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const form = e.target;
+    const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     
-    const updatedRisk = {
+    const updatedRisk: Risk = {
       id: currentRisk?.id || Date.now().toString(),
-      title: formData.get('title'),
-      description: formData.get('description'),
-      impact: formData.get('impact'),
-      probability: formData.get('probability'),
-      status: formData.get('status'),
-      mitigationPlan: formData.get('mitigationPlan'),
-      project: formData.get('project'),
+      title: formData.get('title') as string,
+      description: formData.get('description') as string,
+      impact: formData.get('impact') as string,
+      probability: formData.get('probability') as string,
+      status: formData.get('status') as string,
+      mitigationPlan: formData.get('mitigationPlan') as string,
+      project: formData.get('project') as string,
       createdBy: currentRisk?.createdBy || 'Jan Kowalski',
       createdAt: currentRisk?.createdAt || new Date().toISOString().split('T')[0]
     };

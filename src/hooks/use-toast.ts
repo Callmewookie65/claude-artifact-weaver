@@ -51,4 +51,6 @@ export function useToast() {
   };
 }
 
-export { toast } from "./use-toast";
+// Create a separate export for the toast function
+const { toast } = useToast();
+export { toast };
