@@ -15,6 +15,20 @@ const Index = () => {
         </header>
 
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+          <Link to="/dashboard" className="no-underline">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center">
+                  <BarChart className="mr-2 h-5 w-5" /> Dashboard
+                </CardTitle>
+                <CardDescription>Panel główny</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Przegląd wszystkich projektów i statystyk.</p>
+              </CardContent>
+            </Card>
+          </Link>
+
           <Link to="/projects" className="no-underline">
             <Card className="hover:shadow-lg transition-shadow">
               <CardHeader className="pb-2">
@@ -80,14 +94,14 @@ const Index = () => {
                 <AlertTriangle className="h-5 w-5" /> Zarządzanie ryzykiem
               </Link>
             </Button>
-            <Button variant="outline" disabled>
-              <span className="flex items-center justify-center gap-2">
-                <ListChecks className="h-5 w-5" /> Dodaj nowe zadanie
-              </span>
+            <Button variant="outline" asChild>
+              <Link to="/dashboard" className="w-full flex items-center justify-center gap-2">
+                <BarChart className="h-5 w-5" /> Dashboard projektowy
+              </Link>
             </Button>
             <Button variant="outline" disabled>
               <span className="flex items-center justify-center gap-2">
-                <BarChart className="h-5 w-5" /> Raporty projektowe
+                <ListChecks className="h-5 w-5" /> Dodaj nowe zadanie
               </span>
             </Button>
           </div>
