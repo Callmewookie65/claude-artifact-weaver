@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -8,8 +8,113 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Settings, Shield, Bell, Lock, Paintbrush } from 'lucide-react';
+import { useTheme } from "next-themes";
+import { useToast } from "@/components/ui/use-toast";
+import { Form, FormField, FormItem, FormLabel, FormControl } from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function SettingsPage() {
+  const { theme, setTheme } = useTheme();
+  const { toast } = useToast();
+  
+  // Organization settings
+  const [orgSettings, setOrgSettings] = useState({
+    name: "Digital Uprising",
+    email: "contact@digitaluprising.com",
+    address: "123 Tech Street",
+    city: "Warsaw",
+    state: "Mazovia",
+    zipCode: "00-001"
+  });
+  
+  // Security settings
+  const [securitySettings, setSecuritySettings] = useState({
+    mfa: false,
+    passwordExpiry: false,
+    sso: true
+  });
+  
+  // Appearance settings
+  const [appearanceSettings, setAppearanceSettings] = useState({
+    colorTheme: "blue",
+    darkMode: theme === "dark",
+    compactView: false
+  });
+  
+  // Notification settings
+  const [notificationSettings, setNotificationSettings] = useState({
+    email: true,
+    projectUpdates: true,
+    taskAssignments: true,
+    riskAlerts: true,
+    teamMentions: true,
+    browser: true
+  });
+  
+  // AI settings
+  const [aiSettings, setAiSettings] = useState({
+    defaultModel: "gpt-4",
+    contentGeneration: true,
+    riskAnalysis: true,
+    projectSuggestions: true,
+    openAiKey: "••••••••••••••••••••••",
+    anthropicKey: ""
+  });
+
+  // Handle organization settings update
+  const handleOrgSettingsUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "Organization settings updated",
+      description: "Your organization information has been saved."
+    });
+  };
+
+  // Handle security settings update
+  const handleSecurityUpdate = () => {
+    toast({
+      title: "Security settings updated",
+      description: "Your security preferences have been saved."
+    });
+  };
+
+  // Handle appearance settings update
+  const handleAppearanceUpdate = () => {
+    // Update theme based on settings
+    setTheme(appearanceSettings.darkMode ? "dark" : "light");
+    
+    toast({
+      title: "Appearance settings updated",
+      description: "Your appearance preferences have been saved."
+    });
+  };
+
+  // Handle notification settings update
+  const handleNotificationUpdate = () => {
+    toast({
+      title: "Notification preferences updated",
+      description: "Your notification preferences have been saved."
+    });
+  };
+
+  // Handle AI settings update
+  const handleAISettingsUpdate = () => {
+    toast({
+      title: "AI settings updated",
+      description: "Your AI settings have been saved."
+    });
+  };
+
+  // Handle API keys update
+  const handleAPIKeysUpdate = (e: React.FormEvent) => {
+    e.preventDefault();
+    toast({
+      title: "API keys updated",
+      description: "Your API configuration has been saved."
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -47,46 +152,72 @@ export default function SettingsPage() {
         
         <TabsContent value="general" className="space-y-6 mt-6">
           <Card>
-            <CardHeader>
-              <CardTitle>Organization Information</CardTitle>
-              <CardDescription>Update your organization details</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="organization-name">Organization Name</Label>
-                  <Input id="organization-name" defaultValue="Digital Uprising" />
+            <form onSubmit={handleOrgSettingsUpdate}>
+              <CardHeader>
+                <CardTitle>Organization Information</CardTitle>
+                <CardDescription>Update your organization details</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-name">Organization Name</Label>
+                    <Input 
+                      id="organization-name" 
+                      value={orgSettings.name}
+                      onChange={(e) => setOrgSettings({...orgSettings, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-email">Organization Email</Label>
+                    <Input 
+                      id="organization-email" 
+                      value={orgSettings.email}
+                      onChange={(e) => setOrgSettings({...orgSettings, email: e.target.value})}
+                    />
+                  </div>
                 </div>
+                
                 <div className="space-y-2">
-                  <Label htmlFor="organization-email">Organization Email</Label>
-                  <Input id="organization-email" defaultValue="contact@digitaluprising.com" />
+                  <Label htmlFor="organization-address">Address</Label>
+                  <Input 
+                    id="organization-address" 
+                    value={orgSettings.address}
+                    onChange={(e) => setOrgSettings({...orgSettings, address: e.target.value})}
+                  />
                 </div>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="organization-address">Address</Label>
-                <Input id="organization-address" />
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="organization-city">City</Label>
-                  <Input id="organization-city" />
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-city">City</Label>
+                    <Input 
+                      id="organization-city" 
+                      value={orgSettings.city}
+                      onChange={(e) => setOrgSettings({...orgSettings, city: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-state">State</Label>
+                    <Input 
+                      id="organization-state" 
+                      value={orgSettings.state}
+                      onChange={(e) => setOrgSettings({...orgSettings, state: e.target.value})}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="organization-zip">Postal Code</Label>
+                    <Input 
+                      id="organization-zip" 
+                      value={orgSettings.zipCode}
+                      onChange={(e) => setOrgSettings({...orgSettings, zipCode: e.target.value})}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="organization-state">State</Label>
-                  <Input id="organization-state" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="organization-zip">Postal Code</Label>
-                  <Input id="organization-zip" />
-                </div>
-              </div>
-            </CardContent>
-            <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline">Cancel</Button>
-              <Button>Save Changes</Button>
-            </CardFooter>
+              </CardContent>
+              <CardFooter className="flex justify-end space-x-2">
+                <Button variant="outline" type="button">Cancel</Button>
+                <Button type="submit">Save Changes</Button>
+              </CardFooter>
+            </form>
           </Card>
           
           <Card>
@@ -139,7 +270,13 @@ export default function SettingsPage() {
                   <Label htmlFor="mfa">Multi-Factor Authentication</Label>
                   <p className="text-muted-foreground text-xs">Require MFA for all users</p>
                 </div>
-                <Switch id="mfa" />
+                <Switch 
+                  id="mfa" 
+                  checked={securitySettings.mfa}
+                  onCheckedChange={(checked) => {
+                    setSecuritySettings({...securitySettings, mfa: checked});
+                  }}
+                />
               </div>
               
               <Separator />
@@ -149,7 +286,13 @@ export default function SettingsPage() {
                   <Label htmlFor="password-expiry">Password Expiry</Label>
                   <p className="text-muted-foreground text-xs">Force password change every 90 days</p>
                 </div>
-                <Switch id="password-expiry" />
+                <Switch 
+                  id="password-expiry" 
+                  checked={securitySettings.passwordExpiry}
+                  onCheckedChange={(checked) => {
+                    setSecuritySettings({...securitySettings, passwordExpiry: checked});
+                  }}
+                />
               </div>
               
               <Separator />
@@ -159,11 +302,18 @@ export default function SettingsPage() {
                   <Label htmlFor="sso">Single Sign-On</Label>
                   <p className="text-muted-foreground text-xs">Enable SSO with Google, Microsoft, etc.</p>
                 </div>
-                <Switch id="sso" defaultChecked />
+                <Switch 
+                  id="sso" 
+                  defaultChecked 
+                  checked={securitySettings.sso}
+                  onCheckedChange={(checked) => {
+                    setSecuritySettings({...securitySettings, sso: checked});
+                  }}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
-              <Button>Save Security Settings</Button>
+              <Button onClick={handleSecurityUpdate}>Save Security Settings</Button>
             </CardFooter>
           </Card>
           
@@ -182,7 +332,35 @@ export default function SettingsPage() {
                     <p className="font-medium">Production Key</p>
                     <p className="text-sm text-muted-foreground">Created on May 12, 2025</p>
                   </div>
-                  <Button variant="outline" size="sm">Regenerate</Button>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">Regenerate</Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Regenerate API Key</SheetTitle>
+                        <SheetDescription>
+                          Are you sure you want to regenerate this API key? All applications using this key will need to be updated.
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="mt-6 space-y-4">
+                        <p>This action cannot be undone. The old key will immediately become invalid.</p>
+                        <div className="flex justify-end gap-3">
+                          <Button variant="outline">Cancel</Button>
+                          <Button 
+                            onClick={() => {
+                              toast({
+                                title: "API key regenerated",
+                                description: "Your new API key has been generated successfully."
+                              });
+                            }}
+                          >
+                            Confirm
+                          </Button>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
                 
                 <div className="flex justify-between items-center p-3 border rounded-md">
@@ -190,12 +368,49 @@ export default function SettingsPage() {
                     <p className="font-medium">Development Key</p>
                     <p className="text-sm text-muted-foreground">Created on May 5, 2025</p>
                   </div>
-                  <Button variant="outline" size="sm">Regenerate</Button>
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">Regenerate</Button>
+                    </SheetTrigger>
+                    <SheetContent>
+                      <SheetHeader>
+                        <SheetTitle>Regenerate Development API Key</SheetTitle>
+                        <SheetDescription>
+                          Are you sure you want to regenerate this development API key?
+                        </SheetDescription>
+                      </SheetHeader>
+                      <div className="mt-6 space-y-4">
+                        <p>This action cannot be undone. The old key will immediately become invalid.</p>
+                        <div className="flex justify-end gap-3">
+                          <Button variant="outline">Cancel</Button>
+                          <Button 
+                            onClick={() => {
+                              toast({
+                                title: "Development API key regenerated",
+                                description: "Your new development API key has been generated successfully."
+                              });
+                            }}
+                          >
+                            Confirm
+                          </Button>
+                        </div>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                 </div>
               </div>
             </CardContent>
             <CardFooter>
-              <Button variant="outline" className="w-full">
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => {
+                  toast({
+                    title: "New API key created",
+                    description: "Your new API key has been created successfully."
+                  });
+                }}
+              >
                 Create New API Key
               </Button>
             </CardFooter>
@@ -213,15 +428,30 @@ export default function SettingsPage() {
                 <div>
                   <Label className="block mb-2">Color Theme</Label>
                   <div className="grid grid-cols-3 gap-2">
-                    <div className="border rounded-md p-2 cursor-pointer flex items-center space-x-2">
+                    <div 
+                      className={`border rounded-md p-2 cursor-pointer flex items-center space-x-2 ${
+                        appearanceSettings.colorTheme === "blue" ? "ring-2 ring-blue-500" : ""
+                      }`}
+                      onClick={() => setAppearanceSettings({...appearanceSettings, colorTheme: "blue"})}
+                    >
                       <div className="w-4 h-4 rounded-full bg-blue-600"></div>
                       <span className="text-sm">Blue</span>
                     </div>
-                    <div className="border rounded-md p-2 cursor-pointer flex items-center space-x-2">
+                    <div 
+                      className={`border rounded-md p-2 cursor-pointer flex items-center space-x-2 ${
+                        appearanceSettings.colorTheme === "purple" ? "ring-2 ring-purple-500" : ""
+                      }`}
+                      onClick={() => setAppearanceSettings({...appearanceSettings, colorTheme: "purple"})}
+                    >
                       <div className="w-4 h-4 rounded-full bg-purple-600"></div>
                       <span className="text-sm">Purple</span>
                     </div>
-                    <div className="border rounded-md p-2 cursor-pointer flex items-center space-x-2">
+                    <div 
+                      className={`border rounded-md p-2 cursor-pointer flex items-center space-x-2 ${
+                        appearanceSettings.colorTheme === "green" ? "ring-2 ring-green-500" : ""
+                      }`}
+                      onClick={() => setAppearanceSettings({...appearanceSettings, colorTheme: "green"})}
+                    >
                       <div className="w-4 h-4 rounded-full bg-green-600"></div>
                       <span className="text-sm">Green</span>
                     </div>
@@ -233,7 +463,13 @@ export default function SettingsPage() {
                     <Label htmlFor="dark-mode">Dark Mode</Label>
                     <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
                   </div>
-                  <Switch id="dark-mode" />
+                  <Switch 
+                    id="dark-mode"
+                    checked={appearanceSettings.darkMode}
+                    onCheckedChange={(checked) => {
+                      setAppearanceSettings({...appearanceSettings, darkMode: checked});
+                    }}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -241,13 +477,31 @@ export default function SettingsPage() {
                     <Label htmlFor="compact-view">Compact View</Label>
                     <p className="text-xs text-muted-foreground">Reduce spacing between elements</p>
                   </div>
-                  <Switch id="compact-view" />
+                  <Switch 
+                    id="compact-view"
+                    checked={appearanceSettings.compactView}
+                    onCheckedChange={(checked) => {
+                      setAppearanceSettings({...appearanceSettings, compactView: checked});
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline">Reset to Defaults</Button>
-              <Button>Save Changes</Button>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setAppearanceSettings({
+                    colorTheme: "blue",
+                    darkMode: false,
+                    compactView: false
+                  });
+                  setTheme("light");
+                }}
+              >
+                Reset to Defaults
+              </Button>
+              <Button onClick={handleAppearanceUpdate}>Save Changes</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -265,7 +519,14 @@ export default function SettingsPage() {
                     <Label>Email Notifications</Label>
                     <p className="text-xs text-muted-foreground">Receive updates via email</p>
                   </div>
-                  <Switch id="email-notifications" defaultChecked />
+                  <Switch 
+                    id="email-notifications" 
+                    defaultChecked 
+                    checked={notificationSettings.email}
+                    onCheckedChange={(checked) => {
+                      setNotificationSettings({...notificationSettings, email: checked});
+                    }}
+                  />
                 </div>
                 
                 <Separator />
@@ -275,19 +536,51 @@ export default function SettingsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Project updates</span>
-                      <Switch id="project-updates" defaultChecked />
+                      <Switch 
+                        id="project-updates" 
+                        defaultChecked 
+                        checked={notificationSettings.projectUpdates}
+                        onCheckedChange={(checked) => {
+                          setNotificationSettings({...notificationSettings, projectUpdates: checked});
+                        }}
+                        disabled={!notificationSettings.email}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Task assignments</span>
-                      <Switch id="task-assignments" defaultChecked />
+                      <Switch 
+                        id="task-assignments" 
+                        defaultChecked 
+                        checked={notificationSettings.taskAssignments}
+                        onCheckedChange={(checked) => {
+                          setNotificationSettings({...notificationSettings, taskAssignments: checked});
+                        }}
+                        disabled={!notificationSettings.email}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Risk alerts</span>
-                      <Switch id="risk-alerts" defaultChecked />
+                      <Switch 
+                        id="risk-alerts" 
+                        defaultChecked 
+                        checked={notificationSettings.riskAlerts}
+                        onCheckedChange={(checked) => {
+                          setNotificationSettings({...notificationSettings, riskAlerts: checked});
+                        }}
+                        disabled={!notificationSettings.email}
+                      />
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm">Team mentions</span>
-                      <Switch id="team-mentions" defaultChecked />
+                      <Switch 
+                        id="team-mentions" 
+                        defaultChecked 
+                        checked={notificationSettings.teamMentions}
+                        onCheckedChange={(checked) => {
+                          setNotificationSettings({...notificationSettings, teamMentions: checked});
+                        }}
+                        disabled={!notificationSettings.email}
+                      />
                     </div>
                   </div>
                 </div>
@@ -299,13 +592,37 @@ export default function SettingsPage() {
                     <Label>Browser Notifications</Label>
                     <p className="text-xs text-muted-foreground">Receive updates in your browser</p>
                   </div>
-                  <Switch id="browser-notifications" defaultChecked />
+                  <Switch 
+                    id="browser-notifications" 
+                    defaultChecked 
+                    checked={notificationSettings.browser}
+                    onCheckedChange={(checked) => {
+                      setNotificationSettings({...notificationSettings, browser: checked});
+                      if (checked && Notification.permission !== 'granted') {
+                        Notification.requestPermission();
+                      }
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline">Reset</Button>
-              <Button>Save Preferences</Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setNotificationSettings({
+                    email: true,
+                    projectUpdates: true,
+                    taskAssignments: true,
+                    riskAlerts: true,
+                    teamMentions: true,
+                    browser: true
+                  });
+                }}
+              >
+                Reset
+              </Button>
+              <Button onClick={handleNotificationUpdate}>Save Preferences</Button>
             </CardFooter>
           </Card>
         </TabsContent>
@@ -323,6 +640,8 @@ export default function SettingsPage() {
                   <select
                     id="ai-model"
                     className="w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    value={aiSettings.defaultModel}
+                    onChange={(e) => setAiSettings({...aiSettings, defaultModel: e.target.value})}
                   >
                     <option value="gpt-4">GPT-4</option>
                     <option value="gpt-3.5">GPT-3.5</option>
@@ -335,7 +654,14 @@ export default function SettingsPage() {
                     <Label>AI Content Generation</Label>
                     <p className="text-xs text-muted-foreground">Allow AI to generate content for projects</p>
                   </div>
-                  <Switch id="ai-content" defaultChecked />
+                  <Switch 
+                    id="ai-content" 
+                    defaultChecked 
+                    checked={aiSettings.contentGeneration}
+                    onCheckedChange={(checked) => {
+                      setAiSettings({...aiSettings, contentGeneration: checked});
+                    }}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -343,7 +669,14 @@ export default function SettingsPage() {
                     <Label>Risk Analysis</Label>
                     <p className="text-xs text-muted-foreground">Use AI to analyze potential project risks</p>
                   </div>
-                  <Switch id="ai-risk" defaultChecked />
+                  <Switch 
+                    id="ai-risk" 
+                    defaultChecked 
+                    checked={aiSettings.riskAnalysis}
+                    onCheckedChange={(checked) => {
+                      setAiSettings({...aiSettings, riskAnalysis: checked});
+                    }}
+                  />
                 </div>
                 
                 <div className="flex items-center justify-between">
@@ -351,13 +684,32 @@ export default function SettingsPage() {
                     <Label>AI Project Suggestions</Label>
                     <p className="text-xs text-muted-foreground">Get AI recommendations for improving projects</p>
                   </div>
-                  <Switch id="ai-suggestions" defaultChecked />
+                  <Switch 
+                    id="ai-suggestions" 
+                    defaultChecked 
+                    checked={aiSettings.projectSuggestions}
+                    onCheckedChange={(checked) => {
+                      setAiSettings({...aiSettings, projectSuggestions: checked});
+                    }}
+                  />
                 </div>
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
-              <Button variant="outline">Reset</Button>
-              <Button>Save AI Settings</Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  setAiSettings({
+                    ...aiSettings,
+                    contentGeneration: true,
+                    riskAnalysis: true,
+                    projectSuggestions: true
+                  });
+                }}
+              >
+                Reset
+              </Button>
+              <Button onClick={handleAISettingsUpdate}>Save AI Settings</Button>
             </CardFooter>
           </Card>
           
@@ -369,17 +721,29 @@ export default function SettingsPage() {
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="openai-key">OpenAI API Key</Label>
-                <Input id="openai-key" type="password" placeholder="Enter your OpenAI API key" value="••••••••••••••••••••••" />
+                <Input 
+                  id="openai-key" 
+                  type="password" 
+                  placeholder="Enter your OpenAI API key" 
+                  value={aiSettings.openAiKey}
+                  onChange={(e) => setAiSettings({...aiSettings, openAiKey: e.target.value})}
+                />
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="anthropic-key">Anthropic API Key (Optional)</Label>
-                <Input id="anthropic-key" type="password" placeholder="Enter your Anthropic API key" />
+                <Input 
+                  id="anthropic-key" 
+                  type="password" 
+                  placeholder="Enter your Anthropic API key"
+                  value={aiSettings.anthropicKey}
+                  onChange={(e) => setAiSettings({...aiSettings, anthropicKey: e.target.value})}
+                />
               </div>
             </CardContent>
             <CardFooter className="flex justify-end space-x-2">
               <Button variant="outline">Cancel</Button>
-              <Button>Save API Keys</Button>
+              <Button onClick={handleAPIKeysUpdate}>Save API Keys</Button>
             </CardFooter>
           </Card>
         </TabsContent>
