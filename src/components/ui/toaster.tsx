@@ -1,5 +1,5 @@
 
-import { useToast } from "@/hooks/use-toast"
+import { useToast, setToastHandler } from "@/hooks/use-toast"
 import {
   Toast,
   ToastClose,
@@ -8,9 +8,16 @@ import {
   ToastTitle,
   ToastViewport,
 } from "@/components/ui/toast"
+import { useEffect } from "react"
 
 export function Toaster() {
-  const { toasts } = useToast()
+  const { toasts, toast, dismissToast } = useToast()
+  
+  // Register the toast function so it can be called from anywhere
+  useEffect(() => {
+    setToastHandler(toast);
+    return () => setToastHandler(null as any);
+  }, [toast]);
 
   return (
     <ToastProvider>
