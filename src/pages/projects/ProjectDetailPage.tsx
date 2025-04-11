@@ -18,7 +18,7 @@ export default function ProjectDetailPage() {
     name: 'Redesign Strony Głównej',
     client: 'Acme Corp',
     status: 'active',
-    description: 'Complete redesign of the client's main website, including modernization of UI, UX improvements, and SEO optimization.',
+    description: "Complete redesign of the client's main website, including modernization of UI, UX improvements, and SEO optimization.",
     progress: 45,
     budget: { used: 25000, total: 50000 },
     riskLevel: 'medium',
