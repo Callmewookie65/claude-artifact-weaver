@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -23,6 +22,9 @@ export interface ProjectData {
   estimatedTime?: number;
   lastActivity?: string;
   id?: string;
+  description?: string;
+  team?: Array<{ id: string; name: string; role: string; avatar: string }>;
+  manager?: { id: string; name: string; avatar: string };
 }
 
 interface ProjectCSVImportProps {
@@ -66,16 +68,13 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
     setError(null);
 
     try {
-      // Read the file contents
       const text = await file.text();
       
-      // Parse CSV
       Papa.parse(text, {
         header: true,
         dynamicTyping: true,
         skipEmptyLines: true,
         step: (results, parser) => {
-          // Update progress based on file parsing
           setProgress(Math.round((results.meta.cursor / text.length) * 100));
         },
         complete: (results) => {
@@ -86,43 +85,31 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
           }
           
           try {
-            // Transform the parsed data to match our ProjectData structure
             const formattedProjects: ProjectData[] = results.data
               .filter(project => project && typeof project === 'object')
               .map((project: any) => {
                 try {
-                  // Get client/company field
                   let client = project.Company || project.Client || project.client;
-  
-                  // Handle various date formats
                   let startDate = project.startDate || project['Start date'] || project['Date created'] || '';
                   let endDate = project.endDate || project['End date'] || project.Deadline || '';
-  
-                  // Handle various status fields
                   let status = project.Status || project.status || 'active';
                   
-                  // Handle budget
                   let budget = { used: 0, total: 0 };
-  
+                  
                   if (project.budget) {
                     if (typeof project.budget === 'string') {
                       try {
                         budget = JSON.parse(project.budget);
                       } catch (e) {
-                        // Try to parse as "used:total" format
-                        const budgetParts = project.budget.split(':');
-                        if (budgetParts.length === 2) {
-                          budget = {
-                            used: parseFloat(budgetParts[0]) || 0,
-                            total: parseFloat(budgetParts[1]) || 0
-                          };
-                        }
+                        budget = {
+                          used: parseFloat(project.budget.split(':')[0]) || 0,
+                          total: parseFloat(project.budget.split(':')[1]) || 0
+                        };
                       }
                     } else if (typeof project.budget === 'object') {
                       budget = project.budget;
                     }
                   } else {
-                    // Try to create budget from 'Open revenue' or other fields
                     const total = parseFloat(project['Open revenue'] || project['Budget'] || 0);
                     const used = total - parseFloat(project['Remaining'] || 0);
                     budget = {
@@ -131,7 +118,6 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
                     };
                   }
                   
-                  // Calculate progress
                   let progress = project.progress || project.Progress;
                   if (!progress && project['Hours'] && project['Estimated time']) {
                     const hours = parseFloat(project['Hours']);
@@ -156,6 +142,9 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
                     estimatedTime: project['Estimated time'],
                     lastActivity: project['Last activity'],
                     id: project.ID || project.id || project.Number?.toString() || undefined,
+                    description: project.Description,
+                    team: project.Team,
+                    manager: project.Manager
                   };
                 } catch (err) {
                   console.error('Error processing project row:', err, project);
@@ -197,7 +186,6 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
     }
   };
 
-  // Reset when dialog closes
   const handleClose = () => {
     setIsOpen(false);
     setFile(null);

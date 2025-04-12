@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -24,7 +25,7 @@ export default function ProjectDetailPage() {
     if (foundProject) {
       setProject(foundProject);
     } else {
-      setProject({
+      const defaultProject: ProjectData = {
         id,
         name: 'Redesign Strony Głównej',
         client: 'Acme Corp',
@@ -45,7 +46,8 @@ export default function ProjectDetailPage() {
           { id: '3', name: 'Piotr Wiśniewski', role: 'Developer', avatar: 'PW' },
           { id: '4', name: 'Marta Lewandowska', role: 'Content Manager', avatar: 'ML' }
         ]
-      });
+      };
+      setProject(defaultProject);
     }
   }, [id, projects]);
   
@@ -67,7 +69,7 @@ export default function ProjectDetailPage() {
       const updated = {
         ...prev,
         ...importedProject,
-        team: prev.team,
+        team: prev.team || [],
         manager: prev.manager
       };
       
@@ -196,7 +198,7 @@ export default function ProjectDetailPage() {
                 {project.manager.avatar}
               </div>
             ) : null}
-            <span>{project.projectManager || project.manager?.name || 'Not assigned'}</span>
+            <span>{project.projectManager || (project.manager?.name || 'Not assigned')}</span>
           </div>
         </div>
         <div className="space-y-2">
