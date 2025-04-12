@@ -101,8 +101,12 @@ export default function AIToolsPage() {
       {activeToolIndex !== null && (
         <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800 rounded-lg p-6 mt-8">
           <h2 className="text-xl font-semibold mb-4 flex items-center">
-            <tools[activeToolIndex].icon className={`h-5 w-5 mr-2 text-${tools[activeToolIndex].color}-500`} />
-            {tools[activeToolIndex].title}
+            {activeToolIndex !== null && (
+              <>
+                <tools[activeToolIndex].icon className={`h-5 w-5 mr-2 text-${tools[activeToolIndex].color}-500`} />
+                {tools[activeToolIndex].title}
+              </>
+            )}
           </h2>
           <p className="text-sm text-muted-foreground mb-4">
             Ask our AI assistant questions about project management, get help with documentation, or generate content for your projects.
