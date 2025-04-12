@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, Outlet } from 'react-router-dom';
 import {
   SidebarProvider,
   Sidebar,
@@ -31,11 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 
-interface MainLayoutProps {
-  children: React.ReactNode;
-}
-
-export default function MainLayout({ children }: MainLayoutProps) {
+export default function MainLayout() {
   const location = useLocation();
   const [notifications] = useState(3); // Example notification count
   
@@ -155,7 +151,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
             </div>
           </header>
           <main className="p-6">
-            {children}
+            <Outlet />
           </main>
         </SidebarInset>
         
