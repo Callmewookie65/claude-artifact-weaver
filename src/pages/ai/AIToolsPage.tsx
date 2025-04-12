@@ -59,6 +59,11 @@ export default function AIToolsPage() {
     }, 1500);
   };
 
+  const renderToolIcon = (index: number) => {
+    const IconComponent = tools[index].icon;
+    return <IconComponent className={`h-5 w-5 mr-2 text-${tools[index].color}-500`} />;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -66,36 +71,39 @@ export default function AIToolsPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {tools.map((tool, idx) => (
-          <Card 
-            key={idx} 
-            className={`bg-gradient-to-br from-${tool.color}-50 to-${tool.color}-50/50 dark:from-${tool.color}-900/20 dark:to-${tool.color}-900/10 border-${tool.color}-100 dark:border-${tool.color}-800 hover:shadow-md transition-all cursor-pointer ${activeToolIndex === idx ? 'ring-2 ring-offset-2 ring-' + tool.color + '-500' : ''}`}
-            onClick={() => handleToolClick(idx)}
-          >
-            <CardHeader>
-              <CardTitle className="flex items-center">
-                <tool.icon className={`h-5 w-5 mr-2 text-${tool.color}-500`} />
-                {tool.title}
-              </CardTitle>
-              <CardDescription>{tool.description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground">Generate {tool.title.toLowerCase()} using AI.</p>
-            </CardContent>
-            <CardFooter>
-              <Button 
-                className={`w-full bg-gradient-to-r from-${tool.color}-600 to-${tool.color}-500 hover:from-${tool.color}-700 hover:to-${tool.color}-600`}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleToolClick(idx);
-                }}
-              >
-                <tool.icon className="h-4 w-4 mr-2" />
-                {tool.action}
-              </Button>
-            </CardFooter>
-          </Card>
-        ))}
+        {tools.map((tool, idx) => {
+          const IconComponent = tool.icon;
+          return (
+            <Card 
+              key={idx} 
+              className={`bg-gradient-to-br from-${tool.color}-50 to-${tool.color}-50/50 dark:from-${tool.color}-900/20 dark:to-${tool.color}-900/10 border-${tool.color}-100 dark:border-${tool.color}-800 hover:shadow-md transition-all cursor-pointer ${activeToolIndex === idx ? 'ring-2 ring-offset-2 ring-' + tool.color + '-500' : ''}`}
+              onClick={() => handleToolClick(idx)}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <IconComponent className={`h-5 w-5 mr-2 text-${tool.color}-500`} />
+                  {tool.title}
+                </CardTitle>
+                <CardDescription>{tool.description}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Generate {tool.title.toLowerCase()} using AI.</p>
+              </CardContent>
+              <CardFooter>
+                <Button 
+                  className={`w-full bg-gradient-to-r from-${tool.color}-600 to-${tool.color}-500 hover:from-${tool.color}-700 hover:to-${tool.color}-600`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToolClick(idx);
+                  }}
+                >
+                  <IconComponent className="h-4 w-4 mr-2" />
+                  {tool.action}
+                </Button>
+              </CardFooter>
+            </Card>
+          );
+        })}
       </div>
       
       {activeToolIndex !== null && (
@@ -103,7 +111,7 @@ export default function AIToolsPage() {
           <h2 className="text-xl font-semibold mb-4 flex items-center">
             {activeToolIndex !== null && (
               <>
-                <tools[activeToolIndex].icon className={`h-5 w-5 mr-2 text-${tools[activeToolIndex].color}-500`} />
+                {renderToolIcon(activeToolIndex)}
                 {tools[activeToolIndex].title}
               </>
             )}
