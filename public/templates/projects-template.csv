@@ -1,0 +1,5 @@
+
+Name,Company,Status,Project manager,Project type,Start date,End date,Progress,Hours,Estimated time,Margin,Risk level
+"Website Redesign","Example Client","active","John Smith","FIXED","2025-01-15","2025-06-30",45,120,250,20,"medium"
+"Mobile App Development","Tech Company","active","Anna Johnson","FIXED","2025-02-01","2025-08-31",20,80,400,15,"low"
+"CRM Implementation","Business Corp","atRisk","Michael Brown","FIXED","2025-01-01","2025-05-15",65,300,350,10,"high"

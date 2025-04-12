@@ -1,15 +1,17 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { Plus, Filter, ArrowUpDown } from 'lucide-react';
+import { Plus, Filter, ArrowUpDown, Download } from 'lucide-react';
+import { ProjectCSVImport, ProjectData } from '@/components/projects/ProjectCSVImport';
+import { toast } from "@/hooks/use-toast";
 
 export default function ProjectsPage() {
   // Sample project data - in a real app, this would be fetched from an API
-  const [projects] = useState([
+  const [projects, setProjects] = useState<ProjectData[]>([
     {
       id: '101',
       name: 'Redesign Strony Głównej',
@@ -71,6 +73,61 @@ export default function ProjectsPage() {
     }
   };
 
+  // Handle download template
+  const handleDownloadTemplate = () => {
+    const link = document.createElement('a');
+    link.href = '/templates/projects-template.csv';
+    link.download = 'projects-template.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Template Downloaded",
+      description: "Fill the template with your project data and import it back"
+    });
+  };
+  
+  // Handle import projects from CSV
+  const handleImportProjects = (importedProjects: ProjectData[]) => {
+    // In a real app, you might want to merge with existing projects or update database
+    // Here we'll just replace the projects state with the imported data
+    setProjects(prevProjects => {
+      // Create a map of existing projects by ID for quick lookup
+      const existingProjectsMap = new Map(
+        prevProjects.map(project => [project.id, project])
+      );
+      
+      // Process imported projects to update existing or add new
+      const updatedProjects = [...prevProjects];
+      
+      importedProjects.forEach(imported => {
+        const existingIndex = updatedProjects.findIndex(p => p.id === imported.id);
+        
+        if (existingIndex >= 0) {
+          // Update existing project
+          updatedProjects[existingIndex] = { 
+            ...updatedProjects[existingIndex],
+            ...imported 
+          };
+        } else {
+          // Add as new project
+          updatedProjects.push({
+            ...imported,
+            id: imported.id || String(Math.floor(Math.random() * 10000) + 1000)
+          });
+        }
+      });
+      
+      return updatedProjects;
+    });
+    
+    toast({
+      title: "Projects Imported",
+      description: `Successfully imported ${importedProjects.length} projects`
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -84,6 +141,10 @@ export default function ProjectsPage() {
             <ArrowUpDown className="h-4 w-4 mr-2" />
             Sort
           </Button>
+          <ProjectCSVImport 
+            onImport={handleImportProjects} 
+            onDownloadTemplate={handleDownloadTemplate} 
+          />
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             New Project
@@ -104,6 +165,12 @@ export default function ProjectsPage() {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
+              {project.projectManager && (
+                <div className="text-sm text-muted-foreground">
+                  Manager: {project.projectManager}
+                </div>
+              )}
+              
               <div>
                 <div className="flex justify-between mb-1">
                   <span className="text-sm text-muted-foreground">Progress</span>
@@ -112,38 +179,71 @@ export default function ProjectsPage() {
                 <Progress value={project.progress} className="h-2" />
               </div>
               
-              <div>
-                <div className="flex justify-between mb-1">
-                  <span className="text-sm text-muted-foreground">Budget</span>
-                  <span className="text-sm font-medium">
-                    {getBudgetPercentage(project.budget.used, project.budget.total)}%
-                  </span>
+              {project.budget && (
+                <div>
+                  <div className="flex justify-between mb-1">
+                    <span className="text-sm text-muted-foreground">Budget</span>
+                    <span className="text-sm font-medium">
+                      {getBudgetPercentage(project.budget.used, project.budget.total)}%
+                    </span>
+                  </div>
+                  <Progress 
+                    value={getBudgetPercentage(project.budget.used, project.budget.total)} 
+                    className={`h-2 ${getBudgetPercentage(project.budget.used, project.budget.total) > 90 ? 'bg-red-200' : ''}`} 
+                  />
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-muted-foreground">
+                      {project.budget.used.toLocaleString()} / {project.budget.total.toLocaleString()} PLN
+                    </span>
+                  </div>
                 </div>
-                <Progress 
-                  value={getBudgetPercentage(project.budget.used, project.budget.total)} 
-                  className={`h-2 ${getBudgetPercentage(project.budget.used, project.budget.total) > 90 ? 'bg-red-200' : ''}`} 
-                />
-                <div className="flex justify-between mt-1">
-                  <span className="text-xs text-muted-foreground">
-                    {project.budget.used.toLocaleString()} / {project.budget.total.toLocaleString()} PLN
-                  </span>
-                </div>
-              </div>
+              )}
               
               <div className="grid grid-cols-3 text-xs text-muted-foreground">
                 <div className="flex flex-col">
                   <span>Risk</span>
-                  <span className="font-medium text-foreground">{getRiskBadge(project.riskLevel)}</span>
+                  <span className="font-medium text-foreground">{getRiskBadge(project.riskLevel || 'medium')}</span>
                 </div>
-                <div className="flex flex-col">
-                  <span>Start</span>
-                  <span className="font-medium text-foreground">{new Date(project.startDate).toLocaleDateString()}</span>
-                </div>
-                <div className="flex flex-col">
-                  <span>End</span>
-                  <span className="font-medium text-foreground">{new Date(project.endDate).toLocaleDateString()}</span>
-                </div>
+                {project.hoursWorked && project.estimatedTime && (
+                  <div className="flex flex-col">
+                    <span>Hours</span>
+                    <span className="font-medium text-foreground">
+                      {project.hoursWorked} / {project.estimatedTime}
+                    </span>
+                  </div>
+                )}
+                {project.margin && (
+                  <div className="flex flex-col">
+                    <span>Margin</span>
+                    <span className="font-medium text-foreground">{project.margin}%</span>
+                  </div>
+                )}
               </div>
+
+              <div className="grid grid-cols-2 text-xs text-muted-foreground">
+                {project.startDate && (
+                  <div className="flex flex-col">
+                    <span>Start</span>
+                    <span className="font-medium text-foreground">
+                      {new Date(project.startDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+                {project.endDate && (
+                  <div className="flex flex-col">
+                    <span>End</span>
+                    <span className="font-medium text-foreground">
+                      {new Date(project.endDate).toLocaleDateString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+              
+              {project.lastActivity && (
+                <div className="text-xs text-muted-foreground">
+                  Last activity: {new Date(project.lastActivity).toLocaleString()}
+                </div>
+              )}
             </CardContent>
             <CardFooter className="pt-0">
               <Button variant="outline" size="sm" className="w-full" asChild>
