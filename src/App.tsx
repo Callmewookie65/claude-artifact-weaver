@@ -14,7 +14,7 @@ import IntegrationsPage from './pages/integrations/IntegrationsPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import UsersPage from './pages/admin/UsersPage';
 import NotFound from './pages/NotFound';
-import { ProjectsProvider } from './pages/Dashboard';
+import { ProjectsProvider } from '@/components/providers/ProjectsProvider';
 
 function App() {
   return (
