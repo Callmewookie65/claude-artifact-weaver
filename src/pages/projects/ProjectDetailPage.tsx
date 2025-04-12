@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -7,13 +6,15 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, FileText, Users, AlertTriangle, Settings, Edit, Activity } from 'lucide-react';
+import { ImportCSVDialog } from '@/components/projects/ImportCSVDialog';
+import { toast } from "@/hooks/use-toast";
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('overview');
   
   // Mock project data - in a real app, this would be fetched from an API
-  const project = {
+  const [project, setProject] = useState({
     id,
     name: 'Redesign Strony Głównej',
     client: 'Acme Corp',
@@ -34,6 +35,24 @@ export default function ProjectDetailPage() {
       { id: '3', name: 'Piotr Wiśniewski', role: 'Developer', avatar: 'PW' },
       { id: '4', name: 'Marta Lewandowska', role: 'Content Manager', avatar: 'ML' }
     ]
+  });
+  
+  // Handle updating project data from CSV import
+  const handleImportCSV = (data: Record<string, any>) => {
+    setProject(prev => ({
+      ...prev,
+      ...data,
+      // Preserve team and manager data if not provided in CSV
+      team: data.team || prev.team,
+      manager: data.manager || prev.manager,
+      // Ensure id remains the same
+      id: prev.id
+    }));
+
+    toast({
+      title: "Project Updated",
+      description: `Project "${data.name}" has been updated successfully.`,
+    });
   };
   
   // Get status badge
@@ -68,6 +87,7 @@ export default function ProjectDetailPage() {
           {getStatusBadge(project.status)}
         </div>
         <div className="flex space-x-2">
+          <ImportCSVDialog onImport={handleImportCSV} />
           <Button variant="outline">
             <Edit className="h-4 w-4 mr-2" />
             Edit
