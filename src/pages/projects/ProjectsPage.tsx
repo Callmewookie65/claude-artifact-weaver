@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -7,45 +7,54 @@ import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { Plus, Filter, ArrowUpDown, Download } from 'lucide-react';
 import { ProjectCSVImport, ProjectData } from '@/components/projects/ProjectCSVImport';
+import { BudgetCSVImport } from '@/components/projects/BudgetCSVImport';
 import { toast } from "@/hooks/use-toast";
+import { generateBudgetTemplate, updateProjectBudgets } from '@/utils/csvExport';
+import { ProjectsContext } from '@/components/providers/ProjectsProvider';
 
 export default function ProjectsPage() {
-  // Sample project data - in a real app, this would be fetched from an API
-  const [projects, setProjects] = useState<ProjectData[]>([
-    {
-      id: '101',
-      name: 'Redesign Strony Głównej',
-      client: 'Acme Corp',
-      status: 'active',
-      progress: 45,
-      budget: { used: 25000, total: 50000 },
-      riskLevel: 'medium',
-      startDate: '2025-01-15',
-      endDate: '2025-06-30',
-    },
-    {
-      id: '102',
-      name: 'Aplikacja Mobilna',
-      client: 'XYZ Ltd',
-      status: 'active',
-      progress: 20,
-      budget: { used: 12000, total: 100000 },
-      riskLevel: 'low',
-      startDate: '2025-02-01',
-      endDate: '2025-08-31',
-    },
-    {
-      id: '103',
-      name: 'System CRM',
-      client: 'Best Company',
-      status: 'atRisk',
-      progress: 65,
-      budget: { used: 88000, total: 90000 },
-      riskLevel: 'high',
-      startDate: '2025-01-01',
-      endDate: '2025-05-15',
+  const { projects, setProjects } = useContext(ProjectsContext);
+  
+  // Initialize with sample project data if context is empty
+  useEffect(() => {
+    if (projects.length === 0) {
+      setProjects([
+        {
+          id: '101',
+          name: 'Redesign Strony Głównej',
+          client: 'Acme Corp',
+          status: 'active',
+          progress: 45,
+          budget: { used: 25000, total: 50000 },
+          riskLevel: 'medium',
+          startDate: '2025-01-15',
+          endDate: '2025-06-30',
+        },
+        {
+          id: '102',
+          name: 'Aplikacja Mobilna',
+          client: 'XYZ Ltd',
+          status: 'active',
+          progress: 20,
+          budget: { used: 12000, total: 100000 },
+          riskLevel: 'low',
+          startDate: '2025-02-01',
+          endDate: '2025-08-31',
+        },
+        {
+          id: '103',
+          name: 'System CRM',
+          client: 'Best Company',
+          status: 'atRisk',
+          progress: 65,
+          budget: { used: 88000, total: 90000 },
+          riskLevel: 'high',
+          startDate: '2025-01-01',
+          endDate: '2025-05-15',
+        }
+      ]);
     }
-  ]);
+  }, [projects.length, setProjects]);
 
   // Format budget as percentage
   const getBudgetPercentage = (used: number, total: number) => {
@@ -85,6 +94,27 @@ export default function ProjectsPage() {
     toast({
       title: "Template Downloaded",
       description: "Fill the template with your project data and import it back"
+    });
+  };
+  
+  // Handle budget import
+  const handleBudgetImport = (budgetMap: Record<string, { used: number; total: number }>) => {
+    const updatedProjects = updateProjectBudgets(projects, budgetMap);
+    setProjects(updatedProjects);
+    
+    toast({
+      title: "Budgets Updated",
+      description: `Budget information updated for ${Object.keys(budgetMap).length} projects`
+    });
+  };
+  
+  // Handle budget template download
+  const handleDownloadBudgetTemplate = () => {
+    generateBudgetTemplate();
+    
+    toast({
+      title: "Budget Template Downloaded",
+      description: "Fill the template with budget data and import it back"
     });
   };
   
@@ -144,6 +174,10 @@ export default function ProjectsPage() {
           <ProjectCSVImport 
             onImport={handleImportProjects} 
             onDownloadTemplate={handleDownloadTemplate} 
+          />
+          <BudgetCSVImport 
+            onImport={handleBudgetImport}
+            onDownloadTemplate={handleDownloadBudgetTemplate}
           />
           <Button>
             <Plus className="h-4 w-4 mr-2" />

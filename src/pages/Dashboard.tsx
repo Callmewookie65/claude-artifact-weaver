@@ -2,16 +2,40 @@
 import React, { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, FileUp } from 'lucide-react';
 import { ProjectsContext } from '@/components/providers/ProjectsProvider';
 import { DashboardStats } from '@/components/dashboard/DashboardStats';
 import { DashboardTabs } from '@/components/dashboard/DashboardTabs';
 import { DashboardDeadlines } from '@/components/dashboard/DashboardDeadlines';
 import { DashboardTeam } from '@/components/dashboard/DashboardTeam';
+import { BudgetCSVImport } from '@/components/projects/BudgetCSVImport';
+import { generateBudgetTemplate, updateProjectBudgets } from '@/utils/csvExport';
+import { toast } from '@/hooks/use-toast';
 
 const Dashboard = () => {
-  const { projects } = useContext(ProjectsContext);
+  const { projects, setProjects } = useContext(ProjectsContext);
   const [sortBy, setSortBy] = useState('status');
+
+  // Handle budget import
+  const handleBudgetImport = (budgetMap: Record<string, { used: number; total: number }>) => {
+    const updatedProjects = updateProjectBudgets(projects, budgetMap);
+    setProjects(updatedProjects);
+    
+    toast({
+      title: "Budgets Updated",
+      description: `Budget information updated for ${Object.keys(budgetMap).length} projects`
+    });
+  };
+  
+  // Handle budget template download
+  const handleDownloadBudgetTemplate = () => {
+    generateBudgetTemplate();
+    
+    toast({
+      title: "Budget Template Downloaded",
+      description: "Fill the template with budget data and import it back"
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -28,6 +52,10 @@ const Dashboard = () => {
             <option value="budget">Sortuj wg. Budżetu</option>
             <option value="name">Sortuj wg. Nazwy</option>
           </select>
+          <BudgetCSVImport 
+            onImport={handleBudgetImport}
+            onDownloadTemplate={handleDownloadBudgetTemplate}
+          />
           <Button asChild>
             <Link to="/projects">
               <Briefcase className="mr-2 h-4 w-4" />
