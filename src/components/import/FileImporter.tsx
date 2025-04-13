@@ -1,6 +1,5 @@
-
 import React, { useState, useRef, useCallback } from 'react';
-import { FileUpload, Upload, FileCheck, AlertCircle, FileCode } from 'lucide-react';
+import { Upload, File, UploadCloud, AlertCircle, FileCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
@@ -17,6 +16,16 @@ interface FileItem {
   file: File;
   error?: string;
 }
+
+const getFileIcon = (fileType: string) => {
+  if (fileType === 'text/csv' || fileType.includes('spreadsheet') || fileType.includes('excel')) {
+    return <File className="h-8 w-8 text-terracotta" />;
+  } else if (fileType === 'application/json') {
+    return <File className="h-8 w-8 text-coral" />;
+  } else {
+    return <File className="h-8 w-8 text-gold" />;
+  }
+};
 
 export const FileImporter: React.FC = () => {
   const [files, setFiles] = useState<FileItem[]>([]);
@@ -107,16 +116,6 @@ export const FileImporter: React.FC = () => {
     else return (bytes / 1048576).toFixed(1) + ' MB';
   };
 
-  const getFileIcon = (fileType: string) => {
-    if (fileType === 'text/csv' || fileType.includes('spreadsheet') || fileType.includes('excel')) {
-      return <FileUpload className="h-8 w-8 text-terracotta" />;
-    } else if (fileType === 'application/json') {
-      return <FileCode className="h-8 w-8 text-coral" />;
-    } else {
-      return <FileUpload className="h-8 w-8 text-gold" />;
-    }
-  };
-
   const parseCSV = (file: File): Promise<any[]> => {
     return new Promise((resolve, reject) => {
       Papa.parse(file, {
@@ -164,7 +163,6 @@ export const FileImporter: React.FC = () => {
         resources: []
       };
 
-      // Process all files
       for (let i = 0; i < updatedFiles.length; i++) {
         const file = updatedFiles[i];
         file.status = 'uploading';
@@ -180,7 +178,6 @@ export const FileImporter: React.FC = () => {
             throw new Error('Unsupported file type');
           }
           
-          // Determine data type based on content
           if (file.name.toLowerCase().includes('budget')) {
             importedData.budgets.push(...(Array.isArray(data) ? data : [data]));
           } else if (file.name.toLowerCase().includes('resource')) {
@@ -199,7 +196,6 @@ export const FileImporter: React.FC = () => {
       }
 
       if (importedData.projects.length > 0 || importedData.budgets.length > 0 || importedData.resources.length > 0) {
-        // Store imported data in localStorage or context
         localStorage.setItem('importedData', JSON.stringify(importedData));
         
         toast({
@@ -207,7 +203,6 @@ export const FileImporter: React.FC = () => {
           description: `Zaimportowano ${importedData.projects.length} projektów, ${importedData.budgets.length} budżetów i ${importedData.resources.length} zasobów`,
         });
 
-        // Redirect to projects page after short delay to show success message
         setTimeout(() => {
           navigate('/projects');
         }, 1500);
@@ -242,7 +237,7 @@ export const FileImporter: React.FC = () => {
           multiple
           accept=".csv,.xlsx,.json"
         />
-        <Upload className={`h-16 w-16 mb-4 ${isDragging ? 'text-coral' : 'text-[#666]'}`} />
+        <UploadCloud className={`h-16 w-16 mb-4 ${isDragging ? 'text-coral' : 'text-[#666]'}`} />
         <h3 className="text-xl font-heading mb-2">Przeciągnij i upuść pliki</h3>
         <p className="text-[#999] mb-6 text-center max-w-md">
           Akceptowane formaty: CSV, XLSX, JSON
