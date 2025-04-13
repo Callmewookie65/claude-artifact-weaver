@@ -1,146 +1,37 @@
+
 import React, { useState, useRef, useCallback } from 'react';
-import { Upload, File, UploadCloud, AlertCircle, FileCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
-import Papa from 'papaparse';
-
-type FileStatus = 'idle' | 'uploading' | 'success' | 'error';
-
-interface FileItem {
-  id: string;
-  name: string;
-  size: number;
-  type: string;
-  status: FileStatus;
-  file: File;
-  error?: string;
-}
-
-const getFileIcon = (fileType: string) => {
-  if (fileType === 'text/csv' || fileType.includes('spreadsheet') || fileType.includes('excel')) {
-    return <File className="h-8 w-8 text-terracotta" />;
-  } else if (fileType === 'application/json') {
-    return <File className="h-8 w-8 text-coral" />;
-  } else {
-    return <File className="h-8 w-8 text-gold" />;
-  }
-};
+import { FileItem } from './fileTypes';
+import { FileDropZone } from './FileDropZone';
+import { FileListItem } from './FileListItem';
+import { handleFiles, parseCSV, parseJSON } from './fileUtils';
 
 export const FileImporter: React.FC = () => {
   const [files, setFiles] = useState<FileItem[]>([]);
-  const [isDragging, setIsDragging] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
 
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  }, []);
+  const acceptableTypes = [
+    'text/csv', 
+    'application/vnd.ms-excel', 
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    'application/json'
+  ];
+  
+  const acceptedFormats = ['.csv', '.xlsx', '.json'];
 
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  }, []);
-
-  const processFile = (file: File): FileItem => {
-    return {
-      id: `${file.name}-${Date.now()}`,
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      status: 'idle',
-      file
-    };
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const droppedFiles = Array.from(e.dataTransfer.files);
-    if (droppedFiles.length > 0) {
-      handleFiles(droppedFiles);
+  const handleFilesAdded = useCallback((fileList: File[]) => {
+    const newFiles = handleFiles(fileList, acceptableTypes);
+    if (newFiles.length > 0) {
+      setFiles(prev => [...prev, ...newFiles]);
     }
   }, []);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      handleFiles(Array.from(e.target.files));
-    }
-  };
-
-  const handleFiles = (fileList: File[]) => {
-    const acceptableTypes = [
-      'text/csv', 
-      'application/vnd.ms-excel', 
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      'application/json'
-    ];
-
-    const newFiles = fileList
-      .filter(file => acceptableTypes.includes(file.type) || 
-                      file.name.endsWith('.csv') ||
-                      file.name.endsWith('.xlsx') ||
-                      file.name.endsWith('.json'))
-      .map(processFile);
-
-    if (newFiles.length === 0) {
-      toast({
-        title: "Nieprawidłowy format pliku",
-        description: "Akceptowane formaty: CSV, XLSX, JSON",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setFiles(prev => [...prev, ...newFiles]);
-
-    toast({
-      title: "Pliki dodane",
-      description: `Dodano ${newFiles.length} plików do importu`,
-    });
-  };
 
   const removeFile = (id: string) => {
     setFiles(prev => prev.filter(file => file.id !== id));
-  };
-
-  const formatFileSize = (bytes: number): string => {
-    if (bytes < 1024) return bytes + ' B';
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
-    else return (bytes / 1048576).toFixed(1) + ' MB';
-  };
-
-  const parseCSV = (file: File): Promise<any[]> => {
-    return new Promise((resolve, reject) => {
-      Papa.parse(file, {
-        header: true,
-        complete: (results) => {
-          if (results.errors.length > 0) {
-            reject(results.errors[0].message);
-          } else {
-            resolve(results.data);
-          }
-        },
-        error: (error) => {
-          reject(error.message);
-        }
-      });
-    });
-  };
-
-  const parseJSON = async (file: File): Promise<any> => {
-    try {
-      const text = await file.text();
-      return JSON.parse(text);
-    } catch (error) {
-      throw new Error('Invalid JSON file');
-    }
   };
 
   const processFiles = async () => {
@@ -220,85 +111,23 @@ export const FileImporter: React.FC = () => {
 
   return (
     <div className="w-full space-y-8">
-      <div
-        className={`border-2 border-dashed rounded-2xl p-10 transition-all cursor-pointer bg-opacity-5 flex flex-col items-center justify-center min-h-[300px] ${
-          isDragging ? 'border-coral bg-coral' : 'border-[#333] bg-[#111] hover:bg-coral hover:bg-opacity-5 hover:border-coral'
-        }`}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={() => fileInputRef.current?.click()}
-      >
-        <input
-          ref={fileInputRef}
-          type="file"
-          className="hidden"
-          onChange={handleFileInput}
-          multiple
-          accept=".csv,.xlsx,.json"
-        />
-        <UploadCloud className={`h-16 w-16 mb-4 ${isDragging ? 'text-coral' : 'text-[#666]'}`} />
-        <h3 className="text-xl font-heading mb-2">Przeciągnij i upuść pliki</h3>
-        <p className="text-[#999] mb-6 text-center max-w-md">
-          Akceptowane formaty: CSV, XLSX, JSON
-        </p>
-        <Button className="btn-primary">
-          <Upload className="mr-2 h-5 w-5" />
-          Wybierz pliki
-        </Button>
-      </div>
+      <FileDropZone 
+        onFilesAdded={handleFilesAdded} 
+        acceptedFormats={acceptedFormats} 
+        inputRef={fileInputRef}
+      />
 
       {files.length > 0 && (
         <div className="space-y-6">
           <h2 className="text-2xl font-heading">Wybrane pliki</h2>
           <div className="space-y-4">
             {files.map((file) => (
-              <div
+              <FileListItem
                 key={file.id}
-                className="card-new flex items-center justify-between"
-              >
-                <div className="flex items-center">
-                  {getFileIcon(file.type)}
-                  <div className="ml-4">
-                    <p className="font-medium">{file.name}</p>
-                    <p className="text-sm text-[#999]">{formatFileSize(file.size)}</p>
-                  </div>
-                </div>
-                <div className="flex items-center">
-                  {file.status === 'idle' && (
-                    <span className="text-[#999] text-sm mr-4">Oczekuje</span>
-                  )}
-                  {file.status === 'uploading' && (
-                    <span className="text-coral text-sm mr-4 animate-pulse">Przetwarzanie...</span>
-                  )}
-                  {file.status === 'success' && (
-                    <span className="text-green-500 flex items-center text-sm mr-4">
-                      <FileCheck className="h-4 w-4 mr-1" />
-                      Zaimportowany
-                    </span>
-                  )}
-                  {file.status === 'error' && (
-                    <span className="text-red-500 flex items-center text-sm mr-4">
-                      <AlertCircle className="h-4 w-4 mr-1" />
-                      {file.error || 'Błąd'}
-                    </span>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeFile(file.id);
-                    }}
-                    className="text-[#999] hover:text-white"
-                    disabled={isProcessing}
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                  </Button>
-                </div>
-              </div>
+                file={file}
+                onRemove={removeFile}
+                isProcessing={isProcessing}
+              />
             ))}
           </div>
           <div className="flex justify-end">
