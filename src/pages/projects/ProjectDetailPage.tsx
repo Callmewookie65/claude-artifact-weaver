@@ -12,7 +12,7 @@ import { ProjectTabs } from '@/components/projects/ProjectTabs';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('dashboard');
   const { projects, setProjects } = useContext(ProjectsContext);
   
   const [project, setProject] = useState<ProjectData | null>(null);

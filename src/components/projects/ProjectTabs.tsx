@@ -3,9 +3,10 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, FileText, Users, Calendar, Settings } from 'lucide-react';
+import { AlertTriangle, FileText, Users, Calendar, Settings, BarChart } from 'lucide-react';
 import { ProjectDescription } from './ProjectDescription';
 import { ProjectTeam } from './ProjectTeam';
+import { ProjectDashboard } from './ProjectDashboard';
 import { ProjectData } from './ProjectCSVImport';
 
 interface ProjectTabsProps {
@@ -19,6 +20,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, se
     <Tabs value={activeTab} onValueChange={setActiveTab}>
       <TabsList>
         <TabsTrigger value="overview">Overview</TabsTrigger>
+        <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="tasks">Tasks</TabsTrigger>
         <TabsTrigger value="risks">Risks</TabsTrigger>
         <TabsTrigger value="team">Team</TabsTrigger>
@@ -28,6 +30,10 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, se
       
       <TabsContent value="overview" className="mt-6">
         <ProjectDescription project={project} />
+      </TabsContent>
+      
+      <TabsContent value="dashboard" className="mt-6">
+        <ProjectDashboard project={project} />
       </TabsContent>
       
       <TabsContent value="tasks" className="mt-6">
