@@ -1,13 +1,16 @@
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import React, { useRef } from 'react';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { 
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { Download, Printer, ChartBar, ChartPie } from 'lucide-react';
+import { 
+  Download, Printer, ChartBar, ChartPie, ArrowUpRight, PencilIcon, 
+  Calendar, Users, DollarSign, Clock, AlertTriangle 
+} from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ProjectData } from './ProjectCSVImport';
 import html2canvas from 'html2canvas';
@@ -18,7 +21,7 @@ interface ProjectDashboardProps {
 }
 
 export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) => {
-  const dashboardRef = React.useRef<HTMLDivElement>(null);
+  const dashboardRef = useRef<HTMLDivElement>(null);
   
   // Sample data for charts based on the project
   const budgetData = [
@@ -42,7 +45,7 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
     { name: 'Management', value: 15 }
   ];
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff8042'];
   
   // Calculate remaining days
   const calculateRemainingDays = () => {
@@ -140,28 +143,63 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-heading font-bold">Project Dashboard</h2>
+        <div>
+          <h2 className="text-2xl font-bold">Project Dashboard</h2>
+          <p className="text-muted-foreground">
+            Report generated: {new Date().toLocaleDateString()} | Project period: {
+              project.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} - {
+              project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}
+            <Button variant="link" className="p-0 h-auto ml-2" asChild>
+              <a href="#" className="inline-flex items-center">
+                <PencilIcon className="h-3 w-3 mr-1" />
+                Edit
+              </a>
+            </Button>
+          </p>
+        </div>
         <div className="flex space-x-2">
-          <Button onClick={exportToPNG} variant="outline" size="sm">
+          <Button onClick={exportToPNG} variant="outline" size="sm" className="bg-white/5 backdrop-blur-sm border border-white/10 shadow-md hover:bg-white/10 dark:text-white">
             <Download className="h-4 w-4 mr-2" />
             Export PNG
           </Button>
-          <Button onClick={exportToPDF} variant="outline" size="sm">
+          <Button onClick={exportToPDF} variant="outline" size="sm" className="bg-white/5 backdrop-blur-sm border border-white/10 shadow-md hover:bg-white/10 dark:text-white">
             <Printer className="h-4 w-4 mr-2" />
             Export PDF
           </Button>
         </div>
       </div>
       
-      <div ref={dashboardRef} className="space-y-6 p-4 bg-background rounded-lg">
+      <div ref={dashboardRef} className="space-y-6 p-6 rounded-lg bg-gray-50 dark:bg-gray-900/40 backdrop-blur-sm border border-white/10 shadow-lg">
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Budget Status</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-4 w-4 text-cyan-400" />
+                <CardTitle className="text-lg">Time Remaining</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold text-gradient-primary">
+                {calculateRemainingDays()}
+              </div>
+              <p className="text-sm text-muted-foreground mt-1">
+                {project.endDate ? 
+                  `Due: ${new Date(project.endDate).toLocaleDateString()}` : 
+                  'No end date set'}
+              </p>
+            </CardContent>
+          </Card>
+          
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
+            <CardHeader className="pb-2">
+              <div className="flex items-center space-x-2">
+                <DollarSign className="h-4 w-4 text-green-400" />
+                <CardTitle className="text-lg">Budget Status</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-gradient-primary">
                 {project.budget ? 
                   `${Math.round((project.budget.used / project.budget.total) * 100)}%` : 
                   'N/A'}
@@ -174,12 +212,15 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
             </CardContent>
           </Card>
           
-          <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Project Progress</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Clock className="h-4 w-4 text-purple-400" />
+                <CardTitle className="text-lg">Project Progress</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
+              <div className="text-3xl font-bold text-gradient-primary">
                 {project.progress || 0}%
               </div>
               <p className="text-sm text-muted-foreground mt-1">
@@ -191,18 +232,19 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
             </CardContent>
           </Card>
           
-          <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="pb-2">
-              <CardTitle className="text-lg">Time Remaining</CardTitle>
+              <div className="flex items-center space-x-2">
+                <Users className="h-4 w-4 text-orange-400" />
+                <CardTitle className="text-lg">Team Members</CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold">
-                {calculateRemainingDays()}
+              <div className="text-3xl font-bold text-gradient-primary">
+                {project.team?.length || 0}
               </div>
               <p className="text-sm text-muted-foreground mt-1">
-                {project.endDate ? 
-                  `Due: ${new Date(project.endDate).toLocaleDateString()}` : 
-                  'No end date set'}
+                {project.manager?.name ? `Managed by ${project.manager.name}` : 'No manager assigned'}
               </p>
             </CardContent>
           </Card>
@@ -211,71 +253,116 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
         {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Budget Chart */}
-          <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">Budget Overview</CardTitle>
+              <div>
+                <CardTitle className="text-lg">Budget Overview</CardTitle>
+                <CardDescription>
+                  <span className="flex items-center">
+                    <span className="text-sm text-muted-foreground">Financial data</span>
+                    <Button variant="link" size="sm" className="p-0 h-auto ml-1">
+                      <a href="#" className="inline-flex items-center text-xs">
+                        <PencilIcon className="h-3 w-3 mr-1" />
+                        Edit
+                      </a>
+                    </Button>
+                  </span>
+                </CardDescription>
+              </div>
               <ChartBar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="h-80">
               <ChartContainer 
                 config={{
-                  planned: { label: "Planned Budget" },
-                  actual: { label: "Actual Spent" }
+                  planned: { label: "Planned Budget", theme: { light: "#8884d8", dark: "#8884d8" } },
+                  actual: { label: "Actual Spent", theme: { light: "#82ca9d", dark: "#82ca9d" } }
                 }}
               >
                 <BarChart
                   data={budgetData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="name" tick={{ fill: '#888' }} />
+                  <YAxis tick={{ fill: '#888' }} />
                   <ChartTooltip
                     content={<ChartTooltipContent />}
                     formatter={(value: number) => [`${value.toLocaleString()} PLN`]}
                   />
                   <Legend />
-                  <Bar dataKey="planned" fill="#8884d8" name="Planned" />
-                  <Bar dataKey="actual" fill="#82ca9d" name="Actual" />
+                  <Bar dataKey="planned" fill="var(--color-planned, #8884d8)" name="Planned" />
+                  <Bar dataKey="actual" fill="var(--color-actual, #82ca9d)" name="Actual" />
                 </BarChart>
               </ChartContainer>
             </CardContent>
           </Card>
           
           {/* Progress Timeline */}
-          <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+          <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">Progress Timeline</CardTitle>
+              <div>
+                <CardTitle className="text-lg">Progress Timeline</CardTitle>
+                <CardDescription>
+                  <span className="flex items-center">
+                    <span className="text-sm text-muted-foreground">Monthly tracking</span>
+                    <Button variant="link" size="sm" className="p-0 h-auto ml-1">
+                      <a href="#" className="inline-flex items-center text-xs">
+                        <PencilIcon className="h-3 w-3 mr-1" />
+                        Edit
+                      </a>
+                    </Button>
+                  </span>
+                </CardDescription>
+              </div>
               <ChartBar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="h-80">
               <ChartContainer 
                 config={{
-                  progress: { label: "Progress %" }
+                  progress: { label: "Progress %", theme: { light: "#8884d8", dark: "#8884d8" } }
                 }}
               >
                 <LineChart
                   data={progressData}
                   margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                 >
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
+                  <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
+                  <XAxis dataKey="month" tick={{ fill: '#888' }} />
+                  <YAxis tick={{ fill: '#888' }} />
                   <ChartTooltip
                     content={<ChartTooltipContent />}
                     formatter={(value: number) => [`${value}%`]}
                   />
                   <Legend />
-                  <Line type="monotone" dataKey="progress" stroke="#8884d8" activeDot={{ r: 8 }} name="Progress" />
+                  <Line 
+                    type="monotone" 
+                    dataKey="progress" 
+                    stroke="var(--color-progress, #8884d8)" 
+                    activeDot={{ r: 8 }} 
+                    name="Progress"
+                  />
                 </LineChart>
               </ChartContainer>
             </CardContent>
           </Card>
           
           {/* Resource Allocation */}
-          <Card className="hover:shadow-md transition-shadow md:col-span-2 dark:border-gray-700 dark:bg-gray-800">
+          <Card className="hover:shadow-md transition-shadow md:col-span-2 bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-lg">Resource Allocation</CardTitle>
+              <div>
+                <CardTitle className="text-lg">Resource Allocation</CardTitle>
+                <CardDescription>
+                  <span className="flex items-center">
+                    <span className="text-sm text-muted-foreground">Team distribution by department</span>
+                    <Button variant="link" size="sm" className="p-0 h-auto ml-1">
+                      <a href="#" className="inline-flex items-center text-xs">
+                        <PencilIcon className="h-3 w-3 mr-1" />
+                        Edit
+                      </a>
+                    </Button>
+                  </span>
+                </CardDescription>
+              </div>
               <ChartPie className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent className="h-80">
@@ -311,9 +398,31 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
         </div>
         
         {/* Project Risk Details */}
-        <Card className="hover:shadow-md transition-shadow dark:border-gray-700 dark:bg-gray-800">
+        <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
           <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Project Risk Assessment</CardTitle>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <AlertTriangle className="h-4 w-4 text-red-400" />
+                <CardTitle className="text-lg">Project Risk Assessment</CardTitle>
+              </div>
+              <Button variant="outline" size="sm" asChild className="bg-white/5 hover:bg-white/10">
+                <a href="#" className="inline-flex items-center">
+                  <ArrowUpRight className="h-4 w-4 mr-2" />
+                  Details
+                </a>
+              </Button>
+            </div>
+            <CardDescription>
+              <span className="flex items-center">
+                <span className="text-sm text-muted-foreground">Last assessment: {new Date().toLocaleDateString()}</span>
+                <Button variant="link" size="sm" className="p-0 h-auto ml-1">
+                  <a href="#" className="inline-flex items-center text-xs">
+                    <PencilIcon className="h-3 w-3 mr-1" />
+                    Edit
+                  </a>
+                </Button>
+              </span>
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -351,6 +460,11 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
             </div>
           </CardContent>
         </Card>
+        
+        <div className="text-center text-xs text-muted-foreground pt-4 border-t border-gray-200 dark:border-gray-800">
+          <p>Generated by PM Dashboard | {new Date().toLocaleDateString()} {new Date().toLocaleTimeString()}</p>
+          <p>Confidential - For internal use only</p>
+        </div>
       </div>
     </div>
   );

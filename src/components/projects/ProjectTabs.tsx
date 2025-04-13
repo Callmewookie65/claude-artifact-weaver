@@ -3,11 +3,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertTriangle, FileText, Users, Calendar, Settings, BarChart } from 'lucide-react';
+import { 
+  AlertTriangle, FileText, Users, Calendar, Settings, BarChart,
+  Download, Printer, PencilIcon, ArrowUpRight 
+} from 'lucide-react';
 import { ProjectDescription } from './ProjectDescription';
 import { ProjectTeam } from './ProjectTeam';
+import { ProjectRisks } from './ProjectRisks';
+import { ProjectTasks } from './ProjectTasks';
 import { ProjectDashboard } from './ProjectDashboard';
 import { ProjectData } from './ProjectCSVImport';
+import { Link } from 'react-router-dom';
 
 interface ProjectTabsProps {
   project: ProjectData;
@@ -18,7 +24,7 @@ interface ProjectTabsProps {
 export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, setActiveTab }) => {
   return (
     <Tabs value={activeTab} onValueChange={setActiveTab}>
-      <TabsList>
+      <TabsList className="grid grid-cols-7 w-full max-w-4xl mb-2">
         <TabsTrigger value="overview">Overview</TabsTrigger>
         <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
         <TabsTrigger value="tasks">Tasks</TabsTrigger>
@@ -37,36 +43,11 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, se
       </TabsContent>
       
       <TabsContent value="tasks" className="mt-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Tasks</CardTitle>
-            <CardDescription>Manage project tasks</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Task management feature will be implemented here.</p>
-          </CardContent>
-          <CardFooter>
-            <Button>Create Task</Button>
-          </CardFooter>
-        </Card>
+        <ProjectTasks project={project} />
       </TabsContent>
       
       <TabsContent value="risks" className="mt-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-              <CardTitle>Risks</CardTitle>
-              <CardDescription>Manage project risks</CardDescription>
-            </div>
-            <Button>
-              <AlertTriangle className="h-4 w-4 mr-2" />
-              Add Risk
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <p>Risk management feature will be implemented here.</p>
-          </CardContent>
-        </Card>
+        <ProjectRisks project={project} />
       </TabsContent>
       
       <TabsContent value="team" className="mt-6">
