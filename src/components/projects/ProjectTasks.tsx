@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
+// Define a TaskItem interface to use throughout the component
 interface TaskItem {
   id: string;
   title: string;
@@ -246,7 +248,13 @@ export const ProjectTasks: React.FC<{ project: ProjectData }> = ({ project }) =>
         } else {
           setTasks(tasks.map(task => 
             task.id === currentTask.id 
-              ? { ...task, ...taskData } 
+              ? { 
+                  ...task, 
+                  title: taskData.title,
+                  description: taskData.description || '',
+                  priority: taskData.priority as 'low' | 'medium' | 'high',
+                  dueDate: taskData.due_date || ''
+                } 
               : task
           ));
         }
@@ -263,15 +271,22 @@ export const ProjectTasks: React.FC<{ project: ProjectData }> = ({ project }) =>
             variant: "destructive"
           });
         } else {
-          setTasks([...tasks, { 
-            ...taskData, 
+          const newTask: TaskItem = {
+            id: taskData.id,
+            title: taskData.title,
+            description: taskData.description || '',
+            status: taskData.status as 'todo' | 'inProgress' | 'done',
+            priority: taskData.priority as 'low' | 'medium' | 'high',
+            dueDate: taskData.due_date || '',
             project: project.name,
             assignee: { 
               id: '1', 
               name: 'Unassigned', 
               avatar: 'UN' 
             }
-          } as TaskItem]);
+          };
+          
+          setTasks([...tasks, newTask]);
         }
       }
     } catch (error) {
