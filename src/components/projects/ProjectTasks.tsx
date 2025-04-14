@@ -8,6 +8,7 @@ import { Pencil, ArrowUpRight, Clock, ListTodo, Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
 
+// Define a TaskItem interface to use throughout the component
 interface TaskItem {
   id: string;
   title: string;
@@ -17,6 +18,18 @@ interface TaskItem {
   dueDate: string;
   project: string;
   assignee: { id: string; name: string; avatar: string };
+}
+
+// Define the DB Task interface that matches our database schema
+interface DbTask {
+  id: string;
+  title: string;
+  description: string | null;
+  status: 'todo' | 'inProgress' | 'done';
+  priority: 'low' | 'medium' | 'high';
+  due_date: string | null;
+  project_id: string;
+  assignee: string | null;
 }
 
 interface ProjectTasksProps {
@@ -70,8 +83,9 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        const { data, error } = await supabase
-          .from('tasks')
+        // Use type assertion to work around type limitations
+        const { data, error } = await (supabase
+          .from('tasks') as any)
           .select('*')
           .eq('project_id', project.id);
           
@@ -82,13 +96,13 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
         
         if (data && data.length > 0) {
           // Transform from database format to our TaskItem format
-          const formattedTasks: TaskItem[] = data.map(task => ({
+          const formattedTasks: TaskItem[] = (data as DbTask[]).map(task => ({
             id: task.id,
             title: task.title,
-            description: task.description,
+            description: task.description || '',
             status: task.status,
             priority: task.priority,
-            dueDate: task.due_date,
+            dueDate: task.due_date || '',
             project: project.name,
             assignee: task.assignee ? JSON.parse(task.assignee) : { id: '1', name: 'Unassigned', avatar: 'UN' }
           }));
@@ -172,8 +186,8 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     // Save to Supabase if available
     const saveTaskStatus = async () => {
       try {
-        const { error } = await supabase
-          .from('tasks')
+        const { error } = await (supabase
+          .from('tasks') as any)
           .update({ status })
           .eq('id', draggedTask.id);
           
@@ -238,8 +252,8 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
       
       if (currentTask) {
         // Update existing task
-        const result = await supabase
-          .from('tasks')
+        const result = await (supabase
+          .from('tasks') as any)
           .update(taskData)
           .eq('id', newTask.id);
           
@@ -252,8 +266,8 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
         }
       } else {
         // Create new task
-        const result = await supabase
-          .from('tasks')
+        const result = await (supabase
+          .from('tasks') as any)
           .insert([taskData]);
           
         error = result.error;
