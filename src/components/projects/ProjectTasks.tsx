@@ -85,12 +85,15 @@ export const ProjectTasks: React.FC<{ project: ProjectData }> = ({ project }) =>
         }
         
         if (data && data.length > 0) {
+          // Convert DbTask[] to TaskItem[] with proper type mapping
           const formattedTasks: TaskItem[] = data.map(task => ({
             id: task.id,
             title: task.title,
             description: task.description || '',
-            status: task.status as 'todo' | 'inProgress' | 'done',
-            priority: task.priority as 'low' | 'medium' | 'high',
+            // Ensure status is one of the required literal types
+            status: (task.status as 'todo' | 'inProgress' | 'done'),
+            // Ensure priority is one of the required literal types
+            priority: (task.priority as 'low' | 'medium' | 'high'),
             dueDate: task.due_date || '',
             project: project.name,
             assignee: task.assignee ? JSON.parse(task.assignee) : { 
@@ -271,6 +274,7 @@ export const ProjectTasks: React.FC<{ project: ProjectData }> = ({ project }) =>
             variant: "destructive"
           });
         } else {
+          // Create new task with the correct TaskItem shape
           const newTask: TaskItem = {
             id: taskData.id,
             title: taskData.title,
