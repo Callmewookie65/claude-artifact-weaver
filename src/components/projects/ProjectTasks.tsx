@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +6,8 @@ import { ProjectData } from './ProjectCSVImport';
 import { Pencil, ArrowUpRight, Clock, ListTodo, Plus, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from "@/hooks/use-toast";
+import type { Tables, TablesInsert, TablesUpdate } from '@/integrations/supabase/types';
 
-// Define a TaskItem interface to use throughout the component
 interface TaskItem {
   id: string;
   title: string;
@@ -20,23 +19,11 @@ interface TaskItem {
   assignee: { id: string; name: string; avatar: string };
 }
 
-// Define the DB Task interface that matches our database schema
-interface DbTask {
-  id: string;
-  title: string;
-  description: string | null;
-  status: 'todo' | 'inProgress' | 'done';
-  priority: 'low' | 'medium' | 'high';
-  due_date: string | null;
-  project_id: string;
-  assignee: string | null;
-}
+type DbTask = Tables<'tasks'>;
+type DbTaskInsert = TablesInsert<'tasks'>;
+type DbTaskUpdate = TablesUpdate<'tasks'>;
 
-interface ProjectTasksProps {
-  project: ProjectData;
-}
-
-export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
+export const ProjectTasks: React.FC<{ project: ProjectData }> = ({ project }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(null);
   const [draggedTask, setDraggedTask] = useState<TaskItem | null>(null);
@@ -79,15 +66,16 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     }
   ]);
 
-  // Try to load tasks from Supabase if available
   useEffect(() => {
     const fetchTasks = async () => {
       try {
-        // Use type assertion to work around type limitations
         const { data, error } = await (supabase
-          .from('tasks') as any)
+          .from('tasks' as any)
           .select('*')
-          .eq('project_id', project.id);
+          .eq('project_id', project.id)) as { 
+            data: DbTask[] | null, 
+            error: any 
+          };
           
         if (error) {
           console.error('Error fetching tasks:', error);
@@ -95,16 +83,19 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
         }
         
         if (data && data.length > 0) {
-          // Transform from database format to our TaskItem format
-          const formattedTasks: TaskItem[] = (data as DbTask[]).map(task => ({
+          const formattedTasks: TaskItem[] = data.map(task => ({
             id: task.id,
             title: task.title,
             description: task.description || '',
-            status: task.status,
-            priority: task.priority,
+            status: task.status as 'todo' | 'inProgress' | 'done',
+            priority: task.priority as 'low' | 'medium' | 'high',
             dueDate: task.due_date || '',
             project: project.name,
-            assignee: task.assignee ? JSON.parse(task.assignee) : { id: '1', name: 'Unassigned', avatar: 'UN' }
+            assignee: task.assignee ? JSON.parse(task.assignee) : { 
+              id: '1', 
+              name: 'Unassigned', 
+              avatar: 'UN' 
+            }
           }));
           
           setTasks(formattedTasks);
@@ -157,6 +148,11 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
   const closeTaskModal = () => {
     setIsModalOpen(false);
     setCurrentTask(null);
+    
+    setTaskTitle('');
+    setTaskDescription('');
+    setTaskPriority('medium');
+    setTaskDueDate('');
   };
   
   const handleDragStart = (e: React.DragEvent, task: TaskItem) => {
@@ -171,45 +167,39 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     e.preventDefault();
   };
   
-  const handleDrop = (e: React.DragEvent, status: 'todo' | 'inProgress' | 'done') => {
+  const handleDrop = async (e: React.DragEvent, status: 'todo' | 'inProgress' | 'done') => {
     e.preventDefault();
     
     if (!draggedTask) return;
     
-    // Update task status in UI
     const updatedTasks = tasks.map(task => 
       task.id === draggedTask.id ? { ...task, status } : task
     );
     
     setTasks(updatedTasks);
     
-    // Save to Supabase if available
-    const saveTaskStatus = async () => {
-      try {
-        const { error } = await (supabase
-          .from('tasks') as any)
-          .update({ status })
-          .eq('id', draggedTask.id);
-          
-        if (error) {
-          console.error('Error updating task status:', error);
-          toast({
-            title: "Error",
-            description: "Failed to update task status",
-            variant: "destructive"
-          });
-        } else {
-          toast({
-            title: "Success",
-            description: "Task moved successfully"
-          });
-        }
-      } catch (error) {
-        console.log('Task updated in UI only');
+    try {
+      const { error } = await (supabase
+        .from('tasks' as any)
+        .update({ status } as DbTaskUpdate)
+        .eq('id', draggedTask.id)) as { error: any };
+        
+      if (error) {
+        console.error('Error updating task status:', error);
+        toast({
+          title: "Error",
+          description: "Failed to update task status",
+          variant: "destructive"
+        });
+      } else {
+        toast({
+          title: "Success",
+          description: "Task moved successfully"
+        });
       }
-    };
-    
-    saveTaskStatus();
+    } catch (error) {
+      console.error('Task update error:', error);
+    }
   };
   
   const handleSaveTask = async () => {
@@ -224,89 +214,72 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     
     setLoading(true);
     
-    const newTask: TaskItem = {
-      id: currentTask?.id || String(Date.now()),
+    const taskData: DbTaskInsert = {
+      id: currentTask?.id || crypto.randomUUID(),
       title: taskTitle,
       description: taskDescription,
       status: currentTask?.status || 'todo',
       priority: taskPriority,
-      dueDate: taskDueDate || new Date().toISOString().split('T')[0],
-      project: project.name,
-      assignee: currentTask?.assignee || { id: '1', name: 'Unassigned', avatar: 'UN' }
+      due_date: taskDueDate || new Date().toISOString().split('T')[0],
+      project_id: project.id,
+      assignee: JSON.stringify({ 
+        id: '1', 
+        name: 'Unassigned', 
+        avatar: 'UN' 
+      })
     };
     
-    // Save to Supabase if available
     try {
-      const taskData = {
-        id: newTask.id,
-        title: newTask.title,
-        description: newTask.description,
-        status: newTask.status,
-        priority: newTask.priority,
-        due_date: newTask.dueDate,
-        project_id: project.id,
-        assignee: JSON.stringify(newTask.assignee)
-      };
-      
-      let error;
-      
       if (currentTask) {
-        // Update existing task
-        const result = await (supabase
-          .from('tasks') as any)
+        const { error } = await (supabase
+          .from('tasks' as any)
           .update(taskData)
-          .eq('id', newTask.id);
-          
-        error = result.error;
+          .eq('id', currentTask.id)) as { error: any };
         
-        if (!error) {
+        if (error) {
+          console.error('Update error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to update task",
+            variant: "destructive"
+          });
+        } else {
           setTasks(tasks.map(task => 
-            task.id === newTask.id ? newTask : task
+            task.id === currentTask.id 
+              ? { ...task, ...taskData } 
+              : task
           ));
         }
       } else {
-        // Create new task
-        const result = await (supabase
-          .from('tasks') as any)
-          .insert([taskData]);
-          
-        error = result.error;
+        const { error } = await (supabase
+          .from('tasks' as any)
+          .insert(taskData)) as { error: any };
         
-        if (!error) {
-          setTasks([...tasks, newTask]);
-        }
-      }
-      
-      if (error) {
-        console.error('Error saving task:', error);
-        // Save to local state anyway
-        if (currentTask) {
-          setTasks(tasks.map(task => 
-            task.id === newTask.id ? newTask : task
-          ));
+        if (error) {
+          console.error('Insert error:', error);
+          toast({
+            title: "Error",
+            description: "Failed to create task",
+            variant: "destructive"
+          });
         } else {
-          setTasks([...tasks, newTask]);
+          setTasks([...tasks, { 
+            ...taskData, 
+            project: project.name,
+            assignee: { 
+              id: '1', 
+              name: 'Unassigned', 
+              avatar: 'UN' 
+            }
+          } as TaskItem]);
         }
       }
     } catch (error) {
-      console.log('Task saved to local state only');
-      // Save to local state
-      if (currentTask) {
-        setTasks(tasks.map(task => 
-          task.id === newTask.id ? newTask : task
-        ));
-      } else {
-        setTasks([...tasks, newTask]);
-      }
+      console.error('Task save error:', error);
+    } finally {
+      setLoading(false);
+      closeTaskModal();
     }
-    
-    setLoading(false);
-    closeTaskModal();
-    
-    toast({
-      title: currentTask ? "Task Updated" : "Task Created",
-      description: `${newTask.title} has been ${currentTask ? "updated" : "added"} successfully`
-    });
   };
 
   return (
@@ -566,3 +539,5 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     </div>
   );
 };
+
+export default ProjectTasks;
