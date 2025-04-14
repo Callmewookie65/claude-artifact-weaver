@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +25,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
   const [currentTask, setCurrentTask] = useState<TaskItem | null>(null);
   const [draggedTask, setDraggedTask] = useState<TaskItem | null>(null);
   
-  // Sample task data
   const tasks: TaskItem[] = [
     {
       id: '1',
@@ -60,12 +58,10 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     }
   ];
   
-  // Group tasks by status
   const getTasks = (status: string) => {
     return tasks.filter(task => task.status === status);
   };
   
-  // Get task priority badge
   const getTaskPriorityBadge = (priority: string) => {
     switch(priority) {
       case 'low':
@@ -79,37 +75,30 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
     }
   };
   
-  // Open task modal for editing or creating
   const openTaskModal = (task: TaskItem | null = null) => {
     setCurrentTask(task);
     setIsModalOpen(true);
   };
   
-  // Close task modal
   const closeTaskModal = () => {
     setIsModalOpen(false);
     setCurrentTask(null);
   };
   
-  // Handle drag start
   const handleDragStart = (e: React.DragEvent, task: TaskItem) => {
     setDraggedTask(task);
   };
   
-  // Handle drag end
   const handleDragEnd = () => {
     setDraggedTask(null);
   };
   
-  // Handle drag over
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
   
-  // Handle drop
   const handleDrop = (e: React.DragEvent, status: 'todo' | 'inProgress' | 'done') => {
     e.preventDefault();
-    // In a real app, this would update the task status in the database
     console.log(`Task ${draggedTask?.id} moved to ${status}`);
   };
 
@@ -122,7 +111,7 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
             Last updated: {new Date().toLocaleDateString()}
             <Button variant="link" className="p-0 h-auto ml-2" asChild>
               <a href="#" className="inline-flex items-center">
-                <PencilIcon className="h-3 w-3 mr-1" />
+                <Pencil className="h-3 w-3 mr-1" />
                 Edit
               </a>
             </Button>
@@ -135,7 +124,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Todo Column */}
         <div 
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, 'todo')}
@@ -183,7 +171,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
           </div>
         </div>
         
-        {/* In Progress Column */}
         <div 
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, 'inProgress')}
@@ -231,7 +218,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
           </div>
         </div>
         
-        {/* Done Column */}
         <div 
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, 'done')}
@@ -280,7 +266,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
         </div>
       </div>
 
-      {/* Task summary */}
       <Card>
         <CardHeader>
           <CardTitle>Tasks Overview</CardTitle>
@@ -334,7 +319,6 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
         </CardFooter>
       </Card>
 
-      {/* Task Modal would go here but we'll just show a placeholder for now */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg">
