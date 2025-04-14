@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Plus, Filter } from 'lucide-react';
+import { AlertTriangle, Plus, Filter, PlusCircle, ArrowUpRight, Pencil } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProjectData } from './ProjectCSVImport';
 
@@ -74,7 +74,7 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
     if (score >= 6) {
       return <Badge variant="destructive">Wysoki</Badge>;
     } else if (score >= 3) {
-      return <Badge variant="warning" className="bg-yellow-500">Średni</Badge>;
+      return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
     } else {
       return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
     }
@@ -86,7 +86,7 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
       case 'low':
         return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
       case 'medium':
-        return <Badge variant="warning" className="bg-yellow-500">Średni</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
       case 'high':
         return <Badge variant="destructive">Wysoki</Badge>;
       default:
@@ -100,7 +100,7 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
       case 'low':
         return <Badge variant="outline" className="bg-green-500 text-white">Niskie</Badge>;
       case 'medium':
-        return <Badge variant="warning" className="bg-yellow-500">Średnie</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-500">Średnie</Badge>;
       case 'high':
         return <Badge variant="destructive">Wysokie</Badge>;
       default:
@@ -143,7 +143,7 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
             Last updated: {new Date().toLocaleDateString()}
             <Button variant="link" className="p-0 h-auto ml-2" asChild>
               <a href="#" className="inline-flex items-center">
-                <PencilIcon className="h-3 w-3 mr-1" />
+                <Pencil className="h-3 w-3 mr-1" />
                 Edit
               </a>
             </Button>

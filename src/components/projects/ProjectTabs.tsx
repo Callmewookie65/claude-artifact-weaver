@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   AlertTriangle, FileText, Users, Calendar, Settings, BarChart,
-  Download, Printer, PencilIcon, ArrowUpRight 
+  Download, Printer, Pencil, ArrowUpRight 
 } from 'lucide-react';
 import { ProjectDescription } from './ProjectDescription';
 import { ProjectTeam } from './ProjectTeam';

@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ProjectData } from './ProjectCSVImport';
-import { PencilIcon, ArrowUpRight, Filter, Clock, ListTodo } from 'lucide-react';
+import { Pencil, ArrowUpRight, Filter, Clock, ListTodo } from 'lucide-react';
 
 interface TaskItem {
   id: string;
@@ -71,7 +71,7 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({ project }) => {
       case 'low':
         return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
       case 'medium':
-        return <Badge variant="warning" className="bg-yellow-500">Średni</Badge>;
+        return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
       case 'high':
         return <Badge variant="destructive">Wysoki</Badge>;
       default:
