@@ -28,7 +28,8 @@ import {
   Search,
   Home,
   DollarSign,
-  UserSquare
+  UserSquare,
+  Menu
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Toaster } from '@/components/ui/toaster';
@@ -57,18 +58,20 @@ export default function MainLayout() {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background text-foreground">
-        <Sidebar variant="inset" className="bg-[#0D0D0D] border-r border-[#222]">
-          <SidebarHeader className="flex flex-col gap-2 px-6">
+        <Sidebar className="bg-white border-r border-[#eee]">
+          <SidebarHeader className="flex flex-col gap-3 px-6">
             <div className="flex items-center justify-between">
               <Link to="/" className="flex items-center space-x-2">
-                <span className="font-heading font-bold text-xl bg-gradient-to-r from-coral via-terracotta to-gold bg-clip-text text-transparent">
+                <span className="font-heading font-bold text-xl bg-gradient-custom">
                   ProjectHub
                 </span>
               </Link>
-              <SidebarTrigger />
+              <SidebarTrigger>
+                <Menu className="h-5 w-5 text-black" />
+              </SidebarTrigger>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="w-full justify-start bg-[#111] border-[#333] hover:bg-[#1A1A1A]">
+              <Button variant="outline" size="sm" className="w-full justify-start bg-[#f5f5f5] border-[#eee] hover:bg-[#f0f0f0]">
                 <Search className="mr-2 h-4 w-4" />
                 <span>Search</span>
               </Button>
@@ -85,7 +88,7 @@ export default function MainLayout() {
                     <SidebarMenuButton
                       isActive={isActive}
                       tooltip={item.name}
-                      className={`${isActive ? 'bg-[#1A1A1A] text-coral' : 'text-[#999] hover:bg-[#1A1A1A] hover:text-coral'}`}
+                      className={`${isActive ? 'bg-[#f5f5f5] text-black font-medium' : 'text-[#555] hover:bg-[#f5f5f5] hover:text-black'}`}
                       asChild
                     >
                       <Link to={item.href}>
@@ -100,7 +103,7 @@ export default function MainLayout() {
             
             {/* Admin Section */}
             <div className="px-3 my-4">
-              <h3 className="text-xs font-semibold text-[#666] mb-2 px-2">Administration</h3>
+              <h3 className="text-xs font-semibold text-[#888] mb-2 px-2">Administration</h3>
               <SidebarMenu>
                 {adminNavigation.map((item) => {
                   const isActive = location.pathname === item.href || location.pathname.startsWith(`${item.href}/`);
@@ -109,7 +112,7 @@ export default function MainLayout() {
                       <SidebarMenuButton
                         isActive={isActive}
                         tooltip={item.name}
-                        className={`${isActive ? 'bg-[#1A1A1A] text-coral' : 'text-[#999] hover:bg-[#1A1A1A] hover:text-coral'}`}
+                        className={`${isActive ? 'bg-[#f5f5f5] text-black font-medium' : 'text-[#555] hover:bg-[#f5f5f5] hover:text-black'}`}
                         asChild
                       >
                         <Link to={item.href}>
@@ -124,22 +127,22 @@ export default function MainLayout() {
             </div>
           </SidebarContent>
           
-          <SidebarFooter className="border-t border-[#222] px-6 py-3">
+          <SidebarFooter className="border-t border-[#eee] px-6 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <Avatar>
-                  <AvatarFallback className="bg-[#1A1A1A] text-coral">JK</AvatarFallback>
+                  <AvatarFallback className="bg-[#f5f5f5] text-black">JK</AvatarFallback>
                 </Avatar>
                 <div className="flex flex-col">
                   <span className="text-sm font-medium">Jan Kowalski</span>
-                  <span className="text-xs text-[#999]">Project Manager</span>
+                  <span className="text-xs text-[#777]">Project Manager</span>
                 </div>
               </div>
               <div className="flex gap-2">
-                <Button variant="ghost" size="icon" className="text-[#999] hover:text-coral hover:bg-[#1A1A1A]">
+                <Button variant="ghost" size="icon" className="text-[#555] hover:text-black hover:bg-[#f5f5f5]">
                   <Bell className="h-5 w-5" />
                   {notifications > 0 && (
-                    <Badge className="absolute top-0 right-0 h-4 w-4 p-0 flex items-center justify-center bg-coral text-white">{notifications}</Badge>
+                    <Badge className="absolute top-0 right-0 h-4 w-4 p-0 flex items-center justify-center bg-black text-white">{notifications}</Badge>
                   )}
                 </Button>
                 <ThemeToggle />
@@ -148,12 +151,12 @@ export default function MainLayout() {
           </SidebarFooter>
         </Sidebar>
         
-        <SidebarInset className="p-0 bg-[#0D0D0D]">
-          <header className="border-b border-[#222] px-6 py-3 bg-[#0D0D0D]">
+        <SidebarInset className="p-0 bg-[#f0f2f5]">
+          <header className="border-b border-[#eee] px-6 py-4 bg-white">
             <div className="flex items-center justify-between">
               <div>
-                <h1 className="text-xl font-heading font-bold text-white">Project Management System</h1>
-                <p className="text-sm text-[#999]">Import, analyze, and manage project data</p>
+                <h1 className="text-xl font-heading font-medium text-black">Project Management System</h1>
+                <p className="text-sm text-[#777]">Import, analyze, and manage project data</p>
               </div>
               <div>
                 {/* Header actions could go here */}

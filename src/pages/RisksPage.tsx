@@ -22,7 +22,6 @@ type Risk = {
 };
 
 export default function RisksPage() {
-  // Sample risk data
   const initialRisks: Risk[] = [
     {
       id: '1',
@@ -108,22 +107,18 @@ export default function RisksPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const { toast } = useToast();
   
-  // Get unique projects for filter
   const projects = [...new Set(risks.map(risk => risk.project))];
   
-  // Open risk modal for editing or creating
   const openRiskModal = (risk: Risk | null = null) => {
     setCurrentRisk(risk);
     setIsModalOpen(true);
   };
   
-  // Close risk modal
   const closeRiskModal = () => {
     setIsModalOpen(false);
     setCurrentRisk(null);
   };
 
-  // Save risk (create or update)
   const saveRisk = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -143,38 +138,34 @@ export default function RisksPage() {
     };
 
     if (currentRisk) {
-      // Update existing risk
       setRisks(risks.map(risk => risk.id === currentRisk.id ? updatedRisk : risk));
       toast({
-        title: "Ryzyko zaktualizowane",
-        description: "Zmiany zostały zapisane pomyślnie."
+        title: "Risk updated",
+        description: "Changes were saved successfully."
       });
     } else {
-      // Add new risk
       setRisks([...risks, updatedRisk]);
       toast({
-        title: "Ryzyko dodane",
-        description: "Nowe ryzyko zostało dodane pomyślnie."
+        title: "Risk added",
+        description: "New risk was added successfully."
       });
     }
     
     closeRiskModal();
   };
 
-  // Delete risk
   const deleteRisk = () => {
     if (currentRisk) {
       setRisks(risks.filter(risk => risk.id !== currentRisk.id));
       toast({
-        title: "Ryzyko usunięte",
-        description: "Ryzyko zostało usunięte pomyślnie.",
+        title: "Risk deleted",
+        description: "Risk was deleted successfully.",
         variant: "destructive"
       });
       closeRiskModal();
     }
   };
   
-  // Filter risks
   const filteredRisks = risks.filter(risk => {
     return (
       (filterImpact === 'all' || risk.impact === filterImpact) &&
@@ -187,7 +178,6 @@ export default function RisksPage() {
     );
   });
   
-  // Get risk score for sorting
   const getRiskScore = (risk) => {
     const impactScore = { low: 1, medium: 2, high: 3 };
     const probabilityScore = { low: 1, medium: 2, high: 3 };
@@ -195,89 +185,84 @@ export default function RisksPage() {
     return impactScore[risk.impact] * probabilityScore[risk.probability];
   };
   
-  // Sort risks by score (highest first)
   const sortedRisks = [...filteredRisks].sort((a, b) => getRiskScore(b) - getRiskScore(a));
   
-  // Get risk level badge
   const getRiskLevelBadge = (impact, probability) => {
     const score = getRiskScore({ impact, probability });
     
     if (score >= 6) {
-      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Wysoki</Badge>;
+      return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">High</Badge>;
     } else if (score >= 3) {
-      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Średni</Badge>;
+      return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Medium</Badge>;
     } else {
-      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Niski</Badge>;
+      return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Low</Badge>;
     }
   };
   
-  // Get impact badge
   const getImpactBadge = (impact) => {
     switch(impact) {
       case 'low':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Niski</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Low</Badge>;
       case 'medium':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Średni</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Medium</Badge>;
       case 'high':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Wysoki</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">High</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">{impact}</Badge>;
     }
   };
   
-  // Get probability badge
   const getProbabilityBadge = (probability) => {
     switch(probability) {
       case 'low':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Niskie</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Low</Badge>;
       case 'medium':
-        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Średnie</Badge>;
+        return <Badge className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200">Medium</Badge>;
       case 'high':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Wysokie</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">High</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">{probability}</Badge>;
     }
   };
   
-  // Get status badge
   const getStatusBadge = (status) => {
     switch(status) {
       case 'identified':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Zidentyfikowane</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200">Identified</Badge>;
       case 'mitigated':
-        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Zminimalizowane</Badge>;
+        return <Badge className="bg-green-100 text-green-800 hover:bg-green-200">Mitigated</Badge>;
       case 'occurred':
-        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Wystąpiło</Badge>;
+        return <Badge className="bg-red-100 text-red-800 hover:bg-red-200">Occurred</Badge>;
       default:
         return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">{status}</Badge>;
     }
   };
   
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-8 p-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Ryzyka</h1>
-        <Button onClick={() => openRiskModal()}>
-          Dodaj ryzyko
+        <h1 className="text-2xl font-bold bg-gradient-custom">Risks</h1>
+        <Button className="bg-black text-white hover:bg-black/90" onClick={() => openRiskModal()}>
+          Add Risk
         </Button>
       </div>
       
-      {/* Filters */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
-          <label htmlFor="search" className="block text-sm font-medium mb-1">
-            Wyszukaj
+          <label htmlFor="search" className="block text-sm font-medium mb-1 text-[#555]">
+            Search
           </label>
           <Input
             id="search"
-            placeholder="Szukaj ryzyk..."
+            placeholder="Search risks..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="bg-white border-[#eee] focus:border-black"
           />
         </div>
         <div>
           <label htmlFor="impact" className="block text-sm font-medium mb-1">
-            Wpływ
+            Impact
           </label>
           <select
             id="impact"
@@ -285,15 +270,15 @@ export default function RisksPage() {
             value={filterImpact}
             onChange={(e) => setFilterImpact(e.target.value)}
           >
-            <option value="all">Wszystkie</option>
-            <option value="low">Niski</option>
-            <option value="medium">Średni</option>
-            <option value="high">Wysoki</option>
+            <option value="all">All</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
           </select>
         </div>
         <div>
           <label htmlFor="probability" className="block text-sm font-medium mb-1">
-            Prawdopodobieństwo
+            Probability
           </label>
           <select
             id="probability"
@@ -301,10 +286,10 @@ export default function RisksPage() {
             value={filterProbability}
             onChange={(e) => setFilterProbability(e.target.value)}
           >
-            <option value="all">Wszystkie</option>
-            <option value="low">Niskie</option>
-            <option value="medium">Średnie</option>
-            <option value="high">Wysokie</option>
+            <option value="all">All</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
           </select>
         </div>
         <div>
@@ -317,15 +302,15 @@ export default function RisksPage() {
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
           >
-            <option value="all">Wszystkie</option>
-            <option value="identified">Zidentyfikowane</option>
-            <option value="mitigated">Zminimalizowane</option>
-            <option value="occurred">Wystąpiło</option>
+            <option value="all">All</option>
+            <option value="identified">Identified</option>
+            <option value="mitigated">Mitigated</option>
+            <option value="occurred">Occurred</option>
           </select>
         </div>
         <div>
           <label htmlFor="project" className="block text-sm font-medium mb-1">
-            Projekt
+            Project
           </label>
           <select
             id="project"
@@ -333,7 +318,7 @@ export default function RisksPage() {
             value={filterProject}
             onChange={(e) => setFilterProject(e.target.value)}
           >
-            <option value="all">Wszystkie</option>
+            <option value="all">All</option>
             {projects.map(project => (
               <option key={project} value={project}>{project}</option>
             ))}
@@ -341,33 +326,32 @@ export default function RisksPage() {
         </div>
       </div>
       
-      {/* Risk summary */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card className="border-0 rounded-xl shadow-sm">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-medium mb-2">Wszystkie ryzyka</h2>
+            <h2 className="text-lg font-medium mb-2">All Risks</h2>
             <p className="text-3xl font-bold">{risks.length}</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 rounded-xl shadow-sm">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-medium mb-2">Wysokie ryzyko</h2>
+            <h2 className="text-lg font-medium mb-2">High Risk</h2>
             <p className="text-3xl font-bold text-red-600">
               {risks.filter(risk => getRiskScore(risk) >= 6).length}
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 rounded-xl shadow-sm">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-medium mb-2">Aktywne</h2>
+            <h2 className="text-lg font-medium mb-2">Active</h2>
             <p className="text-3xl font-bold text-blue-600">
               {risks.filter(risk => risk.status === 'identified').length}
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="border-0 rounded-xl shadow-sm">
           <CardContent className="pt-6">
-            <h2 className="text-lg font-medium mb-2">Zminimalizowane</h2>
+            <h2 className="text-lg font-medium mb-2">Mitigated</h2>
             <p className="text-3xl font-bold text-green-600">
               {risks.filter(risk => risk.status === 'mitigated').length}
             </p>
@@ -375,20 +359,19 @@ export default function RisksPage() {
         </Card>
       </div>
       
-      {/* Risks Table */}
-      <Card>
+      <Card className="border-0 rounded-xl shadow-sm">
         <CardContent className="pt-6">
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Ryzyko</TableHead>
-                <TableHead>Projekt</TableHead>
-                <TableHead>Wpływ</TableHead>
-                <TableHead>Prawdopodobieństwo</TableHead>
-                <TableHead>Poziom</TableHead>
+                <TableHead>Risk</TableHead>
+                <TableHead>Project</TableHead>
+                <TableHead>Impact</TableHead>
+                <TableHead>Probability</TableHead>
+                <TableHead>Level</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Data</TableHead>
-                <TableHead className="text-right">Akcje</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -428,7 +411,7 @@ export default function RisksPage() {
                         openRiskModal(risk);
                       }}
                     >
-                      Edytuj
+                      Edit
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -436,7 +419,7 @@ export default function RisksPage() {
               {sortedRisks.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                    Brak ryzyk spełniających kryteria filtrowania
+                    No risks matching the filter criteria
                   </TableCell>
                 </TableRow>
               )}
@@ -445,61 +428,60 @@ export default function RisksPage() {
         </CardContent>
       </Card>
       
-      {/* Risk Modal */}
       <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-lg bg-white rounded-xl border-0">
           <DialogHeader>
-            <DialogTitle>{currentRisk ? 'Edytuj ryzyko' : 'Nowe ryzyko'}</DialogTitle>
+            <DialogTitle>{currentRisk ? 'Edit Risk' : 'New Risk'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={saveRisk}>
             <div className="grid gap-4 py-4">
               <div className="grid gap-2">
-                <label htmlFor="title" className="text-sm font-medium">Tytuł</label>
+                <label htmlFor="title" className="text-sm font-medium">Title</label>
                 <Input
                   id="title"
                   name="title"
                   defaultValue={currentRisk?.title}
-                  placeholder="Tytuł ryzyka"
+                  placeholder="Risk title"
                   required
                 />
               </div>
               
               <div className="grid gap-2">
-                <label htmlFor="description" className="text-sm font-medium">Opis</label>
+                <label htmlFor="description" className="text-sm font-medium">Description</label>
                 <textarea
                   id="description"
                   name="description"
                   className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   defaultValue={currentRisk?.description}
-                  placeholder="Opis ryzyka"
+                  placeholder="Risk description"
                 />
               </div>
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="grid gap-2">
-                  <label htmlFor="impact" className="text-sm font-medium">Wpływ</label>
+                  <label htmlFor="impact" className="text-sm font-medium">Impact</label>
                   <select
                     id="impact"
                     name="impact"
                     className="w-full p-2 border rounded"
                     defaultValue={currentRisk?.impact || 'medium'}
                   >
-                    <option value="low">Niski</option>
-                    <option value="medium">Średni</option>
-                    <option value="high">Wysoki</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
                   </select>
                 </div>
                 <div className="grid gap-2">
-                  <label htmlFor="probability" className="text-sm font-medium">Prawdopodobieństwo</label>
+                  <label htmlFor="probability" className="text-sm font-medium">Probability</label>
                   <select
                     id="probability"
                     name="probability"
                     className="w-full p-2 border rounded"
                     defaultValue={currentRisk?.probability || 'medium'}
                   >
-                    <option value="low">Niskie</option>
-                    <option value="medium">Średnie</option>
-                    <option value="high">Wysokie</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
                   </select>
                 </div>
               </div>
@@ -513,13 +495,13 @@ export default function RisksPage() {
                     className="w-full p-2 border rounded"
                     defaultValue={currentRisk?.status || 'identified'}
                   >
-                    <option value="identified">Zidentyfikowane</option>
-                    <option value="mitigated">Zminimalizowane</option>
-                    <option value="occurred">Wystąpiło</option>
+                    <option value="identified">Identified</option>
+                    <option value="mitigated">Mitigated</option>
+                    <option value="occurred">Occurred</option>
                   </select>
                 </div>
                 <div className="grid gap-2">
-                  <label htmlFor="project" className="text-sm font-medium">Projekt</label>
+                  <label htmlFor="project" className="text-sm font-medium">Project</label>
                   <select
                     id="project"
                     name="project"
@@ -535,13 +517,13 @@ export default function RisksPage() {
               </div>
               
               <div className="grid gap-2">
-                <label htmlFor="mitigationPlan" className="text-sm font-medium">Plan minimalizacji ryzyka</label>
+                <label htmlFor="mitigationPlan" className="text-sm font-medium">Mitigation Plan</label>
                 <textarea
                   id="mitigationPlan"
                   name="mitigationPlan"
                   className="min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   defaultValue={currentRisk?.mitigationPlan}
-                  placeholder="Opisz plan minimalizacji ryzyka"
+                  placeholder="Describe the mitigation plan"
                 />
               </div>
             </div>
@@ -553,7 +535,7 @@ export default function RisksPage() {
                   variant="destructive" 
                   onClick={deleteRisk}
                 >
-                  Usuń
+                  Delete
                 </Button>
               )}
               <Button 
@@ -561,10 +543,10 @@ export default function RisksPage() {
                 variant="outline" 
                 onClick={closeRiskModal}
               >
-                Anuluj
+                Cancel
               </Button>
               <Button type="submit">
-                {currentRisk ? 'Zapisz zmiany' : 'Dodaj ryzyko'}
+                {currentRisk ? 'Save Changes' : 'Add Risk'}
               </Button>
             </DialogFooter>
           </form>

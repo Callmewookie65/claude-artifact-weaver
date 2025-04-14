@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { generateResourcesTemplate } from '@/utils/csvExport';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
@@ -24,7 +23,6 @@ export default function ResourcesPage() {
   const [filter, setFilter] = useState('');
   
   useEffect(() => {
-    // Try to load resources from localStorage
     const importedData = localStorage.getItem('importedData');
     if (importedData) {
       try {
@@ -47,7 +45,6 @@ export default function ResourcesPage() {
         console.error("Failed to parse imported resource data:", error);
       }
     } else {
-      // Set some sample data if nothing was imported
       setResources([
         {
           id: 'res-1',
@@ -83,7 +80,6 @@ export default function ResourcesPage() {
     }
   }, []);
 
-  // Process skills from string or array
   const processSkills = (skills: any): string[] => {
     if (!skills) return [];
     
@@ -98,7 +94,6 @@ export default function ResourcesPage() {
     return [];
   };
 
-  // Handle resource field change
   const handleResourceChange = (id: string, field: keyof Resource, value: any) => {
     setResources(prev => 
       prev.map(resource => {
@@ -110,7 +105,6 @@ export default function ResourcesPage() {
     );
   };
 
-  // Filter resources
   const filteredResources = resources.filter(resource => {
     if (!filter) return true;
     const searchTerm = filter.toLowerCase();
@@ -121,7 +115,6 @@ export default function ResourcesPage() {
     );
   });
 
-  // Get resource summary
   const getResourceSummary = () => {
     const roles = new Set(resources.map(r => r.role));
     const avgRate = resources.reduce((sum, r) => sum + r.hourlyRate, 0) / (resources.length || 1);
@@ -137,7 +130,6 @@ export default function ResourcesPage() {
 
   const summary = getResourceSummary();
 
-  // Get initials for avatar
   const getInitials = (name: string): string => {
     const parts = name.split(' ');
     if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
@@ -148,17 +140,17 @@ export default function ResourcesPage() {
     <div className="space-y-8">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="font-heading text-3xl font-bold bg-gradient-to-r from-coral via-terracotta to-gold bg-clip-text text-transparent mb-2">
+          <h1 className="font-heading text-3xl font-bold bg-gradient-custom mb-2">
             Resources
           </h1>
-          <p className="text-[#999]">Manage team members and resource allocation</p>
+          <p className="text-[#777]">Manage team members and resource allocation</p>
         </div>
         <div className="flex gap-4">
-          <Button variant="outline" onClick={generateResourcesTemplate} className="border-[#333] bg-[#111] hover:bg-[#1A1A1A] hover:border-coral">
+          <Button variant="outline" onClick={generateResourcesTemplate} className="border-[#eee] bg-white hover:bg-[#f5f5f5]">
             <Download className="mr-2 h-5 w-5" />
             Template
           </Button>
-          <Button className="btn-primary">
+          <Button className="bg-black text-white hover:bg-black/90">
             <PlusCircle className="mr-2 h-5 w-5" />
             Add Resource
           </Button>
@@ -167,24 +159,24 @@ export default function ResourcesPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="card-new">
-          <h3 className="text-xl font-heading text-coral mb-2">Team Size</h3>
+          <h3 className="text-xl font-heading text-black mb-2">Team Size</h3>
           <p className="text-2xl font-bold">{resources.length}</p>
-          <p className="text-[#999] text-sm">Team members</p>
+          <p className="text-[#777] text-sm">Team members</p>
         </div>
         <div className="card-new">
-          <h3 className="text-xl font-heading text-terracotta mb-2">Roles</h3>
+          <h3 className="text-xl font-heading text-black mb-2">Roles</h3>
           <p className="text-2xl font-bold">{summary.uniqueRoles}</p>
-          <p className="text-[#999] text-sm">Unique positions</p>
+          <p className="text-[#777] text-sm">Unique positions</p>
         </div>
         <div className="card-new">
-          <h3 className="text-xl font-heading text-gold mb-2">Avg. Rate</h3>
+          <h3 className="text-xl font-heading text-black mb-2">Avg. Rate</h3>
           <p className="text-2xl font-bold">{summary.avgHourlyRate.toFixed(0)} PLN</p>
-          <p className="text-[#999] text-sm">Per hour</p>
+          <p className="text-[#777] text-sm">Per hour</p>
         </div>
         <div className="card-new">
-          <h3 className="text-xl font-heading text-coral mb-2">Availability</h3>
+          <h3 className="text-xl font-heading text-black mb-2">Availability</h3>
           <p className="text-2xl font-bold">{summary.avgAvailability.toFixed(0)}%</p>
-          <p className="text-[#999] text-sm">Team average</p>
+          <p className="text-[#777] text-sm">Team average</p>
         </div>
       </div>
 
@@ -198,13 +190,13 @@ export default function ResourcesPage() {
                 placeholder="Filter resources..."
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
-                className="pl-9 input-new py-1 px-2 text-sm w-64"
+                className="pl-9 bg-[#f9f9f9] border border-[#eee] rounded-lg py-2 px-3 text-sm w-64 focus:border-black focus:outline-none"
               />
-              <Filter className="h-4 w-4 absolute left-2 top-2.5 text-[#999]" />
+              <Filter className="h-4 w-4 absolute left-2.5 top-2.5 text-[#777]" />
             </div>
           </div>
           
-          <Button variant="ghost" onClick={() => setIsEditing(isEditing ? null : 'all')} className="text-[#999] hover:text-coral">
+          <Button variant="ghost" onClick={() => setIsEditing(isEditing ? null : 'all')} className="text-[#777] hover:text-black">
             <Edit className="mr-2 h-4 w-4" />
             {isEditing ? 'Done Editing' : 'Edit All'}
           </Button>
@@ -213,20 +205,20 @@ export default function ResourcesPage() {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow className="bg-[#111] border-b border-[#222]">
-                <TableHead className="text-[#999]">Name</TableHead>
-                <TableHead className="text-[#999]">Role</TableHead>
-                <TableHead className="text-[#999] text-right">Hourly Rate</TableHead>
-                <TableHead className="text-[#999] text-right">Availability</TableHead>
-                <TableHead className="text-[#999]">Skills</TableHead>
-                <TableHead className="text-[#999]">Contact</TableHead>
+              <TableRow className="bg-[#f9f9f9] border-b border-[#eee]">
+                <TableHead className="text-[#777]">Name</TableHead>
+                <TableHead className="text-[#777]">Role</TableHead>
+                <TableHead className="text-[#777] text-right">Hourly Rate</TableHead>
+                <TableHead className="text-[#777] text-right">Availability</TableHead>
+                <TableHead className="text-[#777]">Skills</TableHead>
+                <TableHead className="text-[#777]">Contact</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredResources.map((resource) => (
                 <TableRow 
                   key={resource.id}
-                  className="border-b border-[#222] hover:bg-[#111]"
+                  className="border-b border-[#eee] hover:bg-[#f9f9f9]"
                 >
                   <TableCell>
                     <div className="flex items-center">
@@ -349,16 +341,16 @@ export default function ResourcesPage() {
           </Table>
         </div>
 
-        <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#222]">
-          <div className="text-sm text-[#999]">
+        <div className="flex justify-between items-center mt-6 pt-6 border-t border-[#eee]">
+          <div className="text-sm text-[#777]">
             Showing {filteredResources.length} of {resources.length} resources
           </div>
           
           <div className="text-right">
             <p className="text-sm font-medium">
-              Total capacity: <span className="text-coral">{resources.reduce((sum, r) => sum + (r.availability / 100), 0).toFixed(1)} FTE</span>
+              Total capacity: <span className="text-black">{resources.reduce((sum, r) => sum + (r.availability / 100), 0).toFixed(1)} FTE</span>
             </p>
-            <p className="text-sm text-[#999]">
+            <p className="text-sm text-[#777]">
               Average hourly rate: {summary.avgHourlyRate.toFixed(0)} PLN/h
             </p>
           </div>
