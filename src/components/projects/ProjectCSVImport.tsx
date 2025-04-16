@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Progress } from '@/components/ui/progress';
-import { AlertCircle, FileUp, FileCheck, Download } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import Papa from 'papaparse';
+import { Download, FileUp } from "lucide-react";
+import { ProjectData } from "@/types/project";
 
 export interface ProjectData {
   name: string;
@@ -29,7 +28,7 @@ export interface ProjectData {
 
 interface ProjectCSVImportProps {
   onImport: (projects: ProjectData[]) => void;
-  onDownloadTemplate?: () => void;
+  onDownloadTemplate: () => void;
 }
 
 export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, onDownloadTemplate }) => {
