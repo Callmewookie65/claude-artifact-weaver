@@ -172,7 +172,7 @@ export const ResourceTable = ({
             </span>
           </p>
           <p className="text-sm text-[#777]">
-            Average hourly rate: {resources.reduce((sum, r) => sum + r.hourlyRate, 0) / (resources.length || 1).toFixed(0)} PLN/h
+            Average hourly rate: {(resources.reduce((sum, r) => sum + r.hourlyRate, 0) / (resources.length || 1)).toFixed(0)} PLN/h
           </p>
         </div>
       </div>
