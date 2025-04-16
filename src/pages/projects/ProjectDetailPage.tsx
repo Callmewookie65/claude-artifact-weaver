@@ -1,4 +1,3 @@
-
 import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
@@ -9,11 +8,13 @@ import { ProjectSummary } from '@/components/projects/ProjectSummary';
 import { ProjectProgress } from '@/components/projects/ProjectProgress';
 import { ProjectBudget } from '@/components/projects/ProjectBudget';
 import { ProjectTabs } from '@/components/projects/ProjectTabs';
+import { ConfluenceImport } from '@/components/projects/ConfluenceImport';
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { projects, setProjects } = useContext(ProjectsContext);
+  const [showConfluenceImport, setShowConfluenceImport] = useState(false);
   
   const [project, setProject] = useState<ProjectData | null>(null);
   
@@ -127,6 +128,29 @@ export default function ProjectDetailPage() {
     });
   };
   
+  const handleConfluenceImport = (confluenceData: any) => {
+    if (!project) return;
+    
+    const updatedProject = {
+      ...project,
+      description: confluenceData.description || project.description,
+      // Add other fields that might come from Confluence
+    };
+    
+    setProject(updatedProject);
+    
+    setProjects(prevProjects => 
+      prevProjects.map(p => p.id === id ? updatedProject : p)
+    );
+    
+    toast({
+      title: "Confluence Data Imported",
+      description: "Project has been updated with Confluence data.",
+    });
+    
+    setShowConfluenceImport(false);
+  };
+  
   if (!project) {
     return (
       <div className="flex items-center justify-center h-[60vh]">
@@ -144,7 +168,15 @@ export default function ProjectDetailPage() {
         project={project}
         onImportCSV={handleImportCSV}
         onDownloadTemplate={handleDownloadTemplate}
+        onToggleConfluenceImport={() => setShowConfluenceImport(!showConfluenceImport)}
       />
+      
+      {showConfluenceImport && (
+        <ConfluenceImport 
+          onImport={handleConfluenceImport} 
+          onCancel={() => setShowConfluenceImport(false)} 
+        />
+      )}
       
       <ProjectSummary project={project} />
       
@@ -153,11 +185,13 @@ export default function ProjectDetailPage() {
         <ProjectBudget project={project} />
       </div>
       
-      <ProjectTabs 
-        project={project}
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      <div className="mt-8">
+        <ProjectTabs 
+          project={project}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+      </div>
     </div>
   );
 }

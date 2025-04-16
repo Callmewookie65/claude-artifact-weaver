@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, FileUp, Download } from 'lucide-react';
+import { ArrowLeft, FileUp, Download, Database } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { ProjectData } from '@/types/project';
@@ -11,9 +11,15 @@ interface ProjectHeaderProps {
   project: ProjectData;
   onImportCSV: (data: Record<string, any>) => void;
   onDownloadTemplate: () => void;
+  onToggleConfluenceImport?: () => void;
 }
 
-export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onImportCSV, onDownloadTemplate }) => {
+export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ 
+  project, 
+  onImportCSV, 
+  onDownloadTemplate,
+  onToggleConfluenceImport
+}) => {
   const navigate = useNavigate();
   
   // Get status badge
@@ -43,7 +49,9 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onImportC
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold">{project.name}</h1>
+          <h1 className="text-xl font-bold">
+            {project.name}
+          </h1>
           <div className="flex items-center space-x-2 mt-1">
             <span className="text-muted-foreground">{project.client}</span>
             {getStatusBadge(project.status)}
@@ -59,6 +67,15 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({ project, onImportC
           <Download className="h-4 w-4 mr-2" />
           Export Template
         </Button>
+        {onToggleConfluenceImport && (
+          <Button
+            variant="outline"
+            onClick={onToggleConfluenceImport}
+          >
+            <Database className="h-4 w-4 mr-2" />
+            Confluence Import
+          </Button>
+        )}
         <Button>
           Edit Project
         </Button>
