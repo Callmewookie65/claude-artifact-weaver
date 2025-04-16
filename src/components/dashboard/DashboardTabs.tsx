@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import { DashboardOverview } from './tabs/DashboardOverview';
 import { DashboardProjects } from './tabs/DashboardProjects';
 import { DashboardAnalytics } from './tabs/DashboardAnalytics';

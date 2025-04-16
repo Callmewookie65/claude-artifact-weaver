@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Link } from 'react-router-dom';
-import { ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import { Badge } from '@/components/ui/badge';
 
 interface DashboardProjectsProps {

@@ -1,7 +1,6 @@
-
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface ProjectSummaryProps {
   project: ProjectData;

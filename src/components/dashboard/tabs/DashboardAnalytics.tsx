@@ -1,11 +1,10 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { 
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, 
   ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line 
 } from 'recharts';
-import { ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface DashboardAnalyticsProps {
   projects: ProjectData[];

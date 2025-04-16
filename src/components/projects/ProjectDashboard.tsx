@@ -12,7 +12,7 @@ import {
   Calendar, Users, DollarSign, Clock, AlertTriangle 
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 

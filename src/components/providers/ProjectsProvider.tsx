@@ -1,6 +1,5 @@
-
 import React, { createContext, useState, ReactNode } from 'react';
-import { ProjectData } from '../projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface ProjectsContextType {
   projects: ProjectData[];

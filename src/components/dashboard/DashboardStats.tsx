@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, AlertTriangle, Calendar, Clock } from 'lucide-react';
-import { ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface DashboardStatsProps {
   projects: ProjectData[];

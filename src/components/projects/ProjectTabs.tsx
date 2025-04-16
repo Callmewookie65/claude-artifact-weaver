@@ -12,7 +12,7 @@ import { ProjectTeam } from './ProjectTeam';
 import { ProjectRisks } from './ProjectRisks';
 import { ProjectTasks } from './ProjectTasks';
 import { ProjectDashboard } from './ProjectDashboard';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import { Link } from 'react-router-dom';
 
 interface ProjectTabsProps {

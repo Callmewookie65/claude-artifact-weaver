@@ -1,8 +1,7 @@
-
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface ProjectBudgetProps {
   project: ProjectData;
