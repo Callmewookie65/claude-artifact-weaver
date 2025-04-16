@@ -2,8 +2,9 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Plus, Filter, ArrowUpDown, Download } from 'lucide-react';
-import { ProjectCSVImport, ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectCSVImport } from '@/components/projects/ProjectCSVImport';
 import { BudgetCSVImport } from '@/components/projects/BudgetCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface ProjectsHeaderProps {
   handleDownloadTemplate: () => void;
@@ -20,7 +21,7 @@ export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
 }) => {
   return (
     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <h1 className="text-3xl font-bold">Projects</h1>
+      <h1 className="text-2xl font-bold">Projects</h1>
       <div className="flex flex-wrap gap-2">
         <Button variant="outline">
           <Filter className="h-4 w-4 mr-2" />

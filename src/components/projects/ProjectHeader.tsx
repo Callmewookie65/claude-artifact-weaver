@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, FileUp, Download } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import { ImportCSVDialog } from './ImportCSVDialog';
 
 interface ProjectHeaderProps {

@@ -1,30 +1,13 @@
+
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogTrigger } from "@/components/ui/dialog";
+import { AlertCircle, Download, FileCheck, FileUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 import { toast } from "@/hooks/use-toast";
-import { Download, FileUp } from "lucide-react";
+import Papa from 'papaparse';
 import { ProjectData } from "@/types/project";
-
-export interface ProjectData {
-  name: string;
-  client: string;
-  projectManager?: string;
-  status: string;
-  progress?: number;
-  budget?: { used: number; total: number };
-  riskLevel?: string;
-  startDate?: string;
-  endDate?: string;
-  margin?: number;
-  hoursWorked?: number;
-  estimatedTime?: number;
-  lastActivity?: string;
-  id?: string;
-  description?: string;
-  team?: Array<{ id: string; name: string; role: string; avatar: string }>;
-  manager?: { id: string; name: string; avatar: string };
-}
 
 interface ProjectCSVImportProps {
   onImport: (projects: ProjectData[]) => void;
@@ -140,7 +123,7 @@ export const ProjectCSVImport: React.FC<ProjectCSVImportProps> = ({ onImport, on
                     hoursWorked: project.Hours || project['Worked time'],
                     estimatedTime: project['Estimated time'],
                     lastActivity: project['Last activity'],
-                    id: project.ID || project.id || project.Number?.toString() || undefined,
+                    id: project.ID || project.id || project.Number?.toString() || String(Math.floor(Math.random() * 10000)),
                     description: project.Description,
                     team: project.Team,
                     manager: project.Manager

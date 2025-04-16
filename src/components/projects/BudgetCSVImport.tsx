@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { AlertCircle, FileUp, FileCheck, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Papa from 'papaparse';
-import { ProjectData } from './ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 
 interface BudgetData {
   ProjectID?: string;
@@ -83,19 +82,16 @@ export const BudgetCSVImport: React.FC<BudgetCSVImportProps> = ({ onImport, onDo
             const formattedBudgets = results.data
               .filter((data) => data && typeof data === 'object')
               .map((entry: any) => {
-                // Process the raw data into our expected format
                 let projectId = entry.ProjectID || entry['Project ID'] || entry.Number || '';
                 let projectName = entry.Project || entry['Project name'] || '';
                 
                 let budget = parseFloat(entry.Budget) || 0;
                 let spent = parseFloat(entry.Spent) || 0;
                 
-                // If we have budget and remaining, calculate spent
                 if (entry.Budget && entry.Remaining && !entry.Spent) {
                   spent = parseFloat(entry.Budget) - parseFloat(entry.Remaining);
                 }
                 
-                // If we have percentage spent and budget, calculate spent
                 if (entry.Budget && entry['Percentage spent'] && !entry.Spent && !entry.Remaining) {
                   spent = (parseFloat(entry.Budget) * parseFloat(entry['Percentage spent'])) / 100;
                 }
@@ -130,11 +126,9 @@ export const BudgetCSVImport: React.FC<BudgetCSVImportProps> = ({ onImport, onDo
 
   const confirmImport = () => {
     if (parsedData.length > 0) {
-      // Convert the parsed data to the format expected by the projects system
       const budgetMap: Record<string, { used: number; total: number }> = {};
       
       parsedData.forEach(entry => {
-        // Use ProjectID or Project name as the key
         const key = entry.ProjectID || entry.Project || entry['Project name'];
         
         if (key && (entry.Budget !== undefined || entry.Spent !== undefined)) {
@@ -332,4 +326,3 @@ export const BudgetCSVImport: React.FC<BudgetCSVImportProps> = ({ onImport, onDo
     </Dialog>
   );
 };
-

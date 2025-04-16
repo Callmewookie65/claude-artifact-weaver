@@ -3,7 +3,7 @@ import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
 import { ProjectsContext } from '@/components/providers/ProjectsProvider';
-import { ProjectData } from '@/components/projects/ProjectCSVImport';
+import { ProjectData } from '@/types/project';
 import { ProjectHeader } from '@/components/projects/ProjectHeader';
 import { ProjectSummary } from '@/components/projects/ProjectSummary';
 import { ProjectProgress } from '@/components/projects/ProjectProgress';
