@@ -1,36 +1,20 @@
 
-import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Plus, Filter, PlusCircle, ArrowUpRight, Pencil, Download } from 'lucide-react';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import React from 'react';
+import { RiskHeader } from './risks/RiskHeader';
+import { RiskSummary } from './risks/RiskSummary';
+import { RiskList } from './risks/RiskList';
+import { RiskModal } from './risks/RiskModal';
+import { useRiskManagement } from './risks/useRiskManagement';
 import { ProjectData } from '@/types/project';
-import { toast } from '@/hooks/use-toast';
-
-interface RiskItem {
-  id: string;
-  title: string;
-  description: string;
-  impact: 'low' | 'medium' | 'high';
-  probability: 'low' | 'medium' | 'high';
-  status: 'identified' | 'mitigated' | 'occurred';
-  mitigationPlan: string;
-  project: string;
-  createdBy: string;
-  createdAt: string;
-}
+import { RiskItem } from './risks/types';
 
 interface ProjectRisksProps {
   project: ProjectData;
 }
 
 export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentRisk, setCurrentRisk] = useState<RiskItem | null>(null);
-  
   // Sample risk data
-  const risks: RiskItem[] = [
+  const initialRisks: RiskItem[] = [
     {
       id: '1',
       title: 'Opóźnienia w dostarczaniu treści',
@@ -56,316 +40,38 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
       createdAt: '2025-03-16'
     },
   ];
-  
-  // Calculate risk score
-  const getRiskScore = (risk: RiskItem) => {
-    const impactScore = { low: 1, medium: 2, high: 3 };
-    const probabilityScore = { low: 1, medium: 2, high: 3 };
-    
-    return impactScore[risk.impact] * probabilityScore[risk.probability];
-  };
-  
-  // Sort risks by score
-  const sortedRisks = [...risks].sort((a, b) => getRiskScore(b) - getRiskScore(a));
-  
-  // Get risk level badge
-  const getRiskLevelBadge = (impact: string, probability: string) => {
-    const score = getRiskScore({ impact, probability } as RiskItem);
-    
-    if (score >= 6) {
-      return <Badge variant="destructive">Wysoki</Badge>;
-    } else if (score >= 3) {
-      return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
-    } else {
-      return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
-    }
-  };
-  
-  // Get impact badge
-  const getImpactBadge = (impact: string) => {
-    switch(impact) {
-      case 'low':
-        return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
-      case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
-      case 'high':
-        return <Badge variant="destructive">Wysoki</Badge>;
-      default:
-        return <Badge variant="outline">{impact}</Badge>;
-    }
-  };
-  
-  // Get probability badge
-  const getProbabilityBadge = (probability: string) => {
-    switch(probability) {
-      case 'low':
-        return <Badge variant="outline" className="bg-green-500 text-white">Niskie</Badge>;
-      case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-500">Średnie</Badge>;
-      case 'high':
-        return <Badge variant="destructive">Wysokie</Badge>;
-      default:
-        return <Badge variant="outline">{probability}</Badge>;
-    }
-  };
-  
-  // Get status badge
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case 'identified':
-        return <Badge className="bg-blue-500 text-white">Zidentyfikowane</Badge>;
-      case 'mitigated':
-        return <Badge variant="outline" className="bg-green-500 text-white">Zminimalizowane</Badge>;
-      case 'occurred':
-        return <Badge variant="destructive">Wystąpiło</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-  
-  // Open risk modal for editing or creating
-  const openRiskModal = (risk: RiskItem | null = null) => {
-    setCurrentRisk(risk);
-    setIsModalOpen(true);
-  };
-  
-  // Close risk modal
-  const closeRiskModal = () => {
-    setIsModalOpen(false);
-    setCurrentRisk(null);
-  };
 
-  // Export risks as CSV
-  const exportRisksCSV = () => {
-    const headers = "id,title,description,impact,probability,status,mitigationPlan,project,createdBy,createdAt\n";
-    
-    const rows = risks.map(risk => (
-      `"${risk.id}","${risk.title.replace(/"/g, '""')}","${risk.description.replace(/"/g, '""')}","${risk.impact}","${risk.probability}","${risk.status}","${risk.mitigationPlan.replace(/"/g, '""')}","${risk.project.replace(/"/g, '""')}","${risk.createdBy}","${risk.createdAt}"`
-    )).join('\n');
-    
-    const csvContent = `${headers}${rows}`;
-    
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.setAttribute('hidden', '');
-    a.setAttribute('href', url);
-    a.setAttribute('download', `project-${project.id}-risks.csv`);
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    
-    toast({
-      title: "Risks Exported",
-      description: "Risk assessment data has been exported as CSV"
-    });
-  };
+  const {
+    risks,
+    isModalOpen,
+    currentRisk,
+    getRiskScore,
+    openRiskModal,
+    closeRiskModal
+  } = useRiskManagement(initialRisks);
 
   return (
     <div className="space-y-4 mb-10">
-      <div className="flex justify-between items-center flex-wrap gap-2">
-        <div>
-          <h2 className="text-2xl font-bold">Project Risks</h2>
-          <p className="text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString()}
-            <Button variant="link" className="p-0 h-auto ml-2" asChild>
-              <a href="#" className="inline-flex items-center">
-                <Pencil className="h-3 w-3 mr-1" />
-                Edit
-              </a>
-            </Button>
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={exportRisksCSV}>
-            <Download className="h-4 w-4 mr-2" />
-            Export Risks
-          </Button>
-          <Button onClick={() => openRiskModal()}>
-            <AlertTriangle className="h-4 w-4 mr-2" />
-            Add Risk
-          </Button>
-        </div>
-      </div>
+      <RiskHeader 
+        project={project} 
+        risks={risks} 
+        openRiskModal={() => openRiskModal()}
+      />
 
-      {/* Risk summary cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">All Risks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{risks.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">High Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-red-600">{risks.filter(risk => getRiskScore(risk) >= 6).length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-600">{risks.filter(risk => risk.status === 'identified').length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mitigated</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">{risks.filter(risk => risk.status === 'mitigated').length}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <div className="flex justify-between flex-wrap gap-2">
-            <div>
-              <CardTitle>Risk Matrix</CardTitle>
-              <CardDescription>Current project risks assessment</CardDescription>
-            </div>
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filter
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Risk</TableHead>
-                <TableHead>Impact</TableHead>
-                <TableHead>Probability</TableHead>
-                <TableHead>Level</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Date</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedRisks.map((risk) => (
-                <TableRow 
-                  key={risk.id} 
-                  className="cursor-pointer hover:bg-accent"
-                  onClick={() => openRiskModal(risk)}
-                >
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">{risk.title}</div>
-                      <div className="text-sm text-muted-foreground line-clamp-1">{risk.description}</div>
-                    </div>
-                  </TableCell>
-                  <TableCell>{getImpactBadge(risk.impact)}</TableCell>
-                  <TableCell>{getProbabilityBadge(risk.probability)}</TableCell>
-                  <TableCell>{getRiskLevelBadge(risk.impact, risk.probability)}</TableCell>
-                  <TableCell>{getStatusBadge(risk.status)}</TableCell>
-                  <TableCell>{new Date(risk.createdAt).toLocaleDateString('pl-PL')}</TableCell>
-                </TableRow>
-              ))}
-              {sortedRisks.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    <div className="text-muted-foreground">No risks found</div>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-        <CardFooter>
-          <Button variant="outline" className="ml-auto">
-            <ArrowUpRight className="h-4 w-4 mr-2" />
-            View All Risks
-          </Button>
-        </CardFooter>
-      </Card>
-
-      {/* Risk Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <Card className="w-full max-w-lg">
-            <CardHeader>
-              <CardTitle>{currentRisk ? 'Edit Risk' : 'Add Risk'}</CardTitle>
-              <CardDescription>
-                {currentRisk ? 'Edit risk details' : 'Create a new risk entry'}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form className="space-y-4">
-                <div>
-                  <label htmlFor="risk-title" className="block text-sm font-medium mb-1">Title</label>
-                  <input
-                    type="text"
-                    id="risk-title"
-                    className="w-full p-2 border rounded-md"
-                    defaultValue={currentRisk?.title}
-                  />
-                </div>
-                <div>
-                  <label htmlFor="risk-description" className="block text-sm font-medium mb-1">Description</label>
-                  <textarea
-                    id="risk-description"
-                    rows={3}
-                    className="w-full p-2 border rounded-md"
-                    defaultValue={currentRisk?.description}
-                  ></textarea>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="risk-impact" className="block text-sm font-medium mb-1">Impact</label>
-                    <select
-                      id="risk-impact"
-                      className="w-full p-2 border rounded-md"
-                      defaultValue={currentRisk?.impact || 'medium'}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label htmlFor="risk-probability" className="block text-sm font-medium mb-1">Probability</label>
-                    <select
-                      id="risk-probability"
-                      className="w-full p-2 border rounded-md"
-                      defaultValue={currentRisk?.probability || 'medium'}
-                    >
-                      <option value="low">Low</option>
-                      <option value="medium">Medium</option>
-                      <option value="high">High</option>
-                    </select>
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="risk-mitigation" className="block text-sm font-medium mb-1">Mitigation Plan</label>
-                  <textarea
-                    id="risk-mitigation"
-                    rows={3}
-                    className="w-full p-2 border rounded-md"
-                    defaultValue={currentRisk?.mitigationPlan}
-                  ></textarea>
-                </div>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <Button variant="outline" onClick={closeRiskModal}>Cancel</Button>
-              <div className="flex gap-2">
-                {currentRisk && (
-                  <Button variant="destructive">Delete</Button>
-                )}
-                <Button>{currentRisk ? 'Update' : 'Create'}</Button>
-              </div>
-            </CardFooter>
-          </Card>
-        </div>
-      )}
+      <RiskSummary risks={risks} getRiskScore={getRiskScore} />
+      
+      <RiskList 
+        risks={risks} 
+        getRiskScore={getRiskScore}
+        openRiskModal={openRiskModal}
+      />
+      
+      <RiskModal 
+        isModalOpen={isModalOpen}
+        closeRiskModal={closeRiskModal}
+        currentRisk={currentRisk}
+        projects={[project.name]}
+      />
     </div>
   );
 };
