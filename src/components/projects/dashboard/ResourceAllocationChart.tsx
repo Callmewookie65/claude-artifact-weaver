@@ -18,18 +18,18 @@ export const ResourceAllocationChart: React.FC<ResourceAllocationChartProps> = (
   exportChartDataCSV
 }) => {
   return (
-    <Card className="hover:shadow-md transition-shadow md:col-span-2 bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
+    <Card className="hover:shadow-md transition-shadow bg-white/5 backdrop-blur-lg border border-white/10 shadow-lg dark:bg-black/20">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <div>
           <CardTitle className="text-lg">Resource Allocation</CardTitle>
           <CardDescription>
             <span className="flex items-center">
               <span className="text-sm text-muted-foreground">Team distribution by department</span>
-              <Button variant="link" size="sm" className="p-0 h-auto ml-1">
-                <a href="#" className="inline-flex items-center text-xs">
+              <Button variant="link" size="sm" className="p-0 h-auto ml-1" onClick={() => window.alert('Edit functionality will be implemented')}>
+                <span className="inline-flex items-center text-xs">
                   <PencilIcon className="h-3 w-3 mr-1" />
                   Edit
-                </a>
+                </span>
               </Button>
             </span>
           </CardDescription>

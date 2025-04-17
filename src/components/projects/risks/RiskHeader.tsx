@@ -1,9 +1,22 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Download, Pencil } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  Download, 
+  FileDown, 
+  FileText,
+  FilePlus,
+  MoreHorizontal
+} from 'lucide-react';
 import { useRiskExport } from './useRiskExport';
 import { RiskItem } from './types';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger
+} from '@/components/ui/dropdown-menu';
 
 interface RiskHeaderProps {
   project: { id: string, name: string };
@@ -12,7 +25,7 @@ interface RiskHeaderProps {
 }
 
 export const RiskHeader: React.FC<RiskHeaderProps> = ({ project, risks, openRiskModal }) => {
-  const { exportRisksCSV } = useRiskExport(project);
+  const { exportRisksCSV, exportRisksJSON, exportRisksPDF } = useRiskExport(project);
 
   return (
     <div className="flex justify-between items-center flex-wrap gap-2">
@@ -20,19 +33,32 @@ export const RiskHeader: React.FC<RiskHeaderProps> = ({ project, risks, openRisk
         <h2 className="text-2xl font-bold">Project Risks</h2>
         <p className="text-muted-foreground">
           Last updated: {new Date().toLocaleDateString()}
-          <Button variant="link" className="p-0 h-auto ml-2" asChild>
-            <a href="#" className="inline-flex items-center">
-              <Pencil className="h-3 w-3 mr-1" />
-              Edit
-            </a>
-          </Button>
         </p>
       </div>
       <div className="flex gap-2">
-        <Button variant="outline" onClick={() => exportRisksCSV(risks)}>
-          <Download className="h-4 w-4 mr-2" />
-          Export Risks
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline">
+              <Download className="h-4 w-4 mr-2" />
+              Export
+              <MoreHorizontal className="h-4 w-4 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => exportRisksCSV(risks)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Export as CSV
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportRisksJSON(risks)}>
+              <FileText className="h-4 w-4 mr-2" />
+              Export as JSON
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => exportRisksPDF(risks)}>
+              <FilePlus className="h-4 w-4 mr-2" />
+              Export as PDF
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button onClick={openRiskModal}>
           <AlertTriangle className="h-4 w-4 mr-2" />
           Add Risk

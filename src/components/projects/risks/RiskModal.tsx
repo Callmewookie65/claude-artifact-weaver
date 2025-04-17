@@ -1,8 +1,15 @@
 
-import React from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
 import { RiskItem } from './types';
+import { supabase } from '@/integrations/supabase/client';
 
 interface RiskModalProps {
   isModalOpen: boolean;
@@ -12,84 +19,307 @@ interface RiskModalProps {
 }
 
 export const RiskModal: React.FC<RiskModalProps> = ({ isModalOpen, closeRiskModal, currentRisk, projects }) => {
-  if (!isModalOpen) return null;
-  
+  const [risk, setRisk] = useState<RiskItem>({
+    id: '',
+    title: '',
+    description: '',
+    impact: 'medium',
+    probability: 'medium',
+    status: 'identified',
+    mitigationPlan: '',
+    project: projects[0] || '',
+    createdBy: 'Current User',
+    createdAt: new Date().toISOString().split('T')[0]
+  });
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (currentRisk) {
+      setRisk(currentRisk);
+    } else {
+      // Reset form for new risk
+      setRisk({
+        id: '',
+        title: '',
+        description: '',
+        impact: 'medium',
+        probability: 'medium',
+        status: 'identified',
+        mitigationPlan: '',
+        project: projects[0] || '',
+        createdBy: 'Current User',
+        createdAt: new Date().toISOString().split('T')[0]
+      });
+    }
+  }, [currentRisk, projects]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setRisk({ ...risk, [name]: value });
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setRisk({ ...risk, [name]: value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, this would connect to Supabase
+      // For now, just simulate a successful save
+      
+      // Example of how Supabase integration would work:
+      /*
+      const { data, error } = currentRisk 
+        ? await supabase
+            .from('risks')
+            .update({
+              title: risk.title,
+              description: risk.description,
+              impact: risk.impact,
+              probability: risk.probability,
+              status: risk.status,
+              mitigation_plan: risk.mitigationPlan,
+              project: risk.project,
+            })
+            .eq('id', risk.id)
+        : await supabase
+            .from('risks')
+            .insert({
+              title: risk.title,
+              description: risk.description,
+              impact: risk.impact,
+              probability: risk.probability,
+              status: risk.status,
+              mitigation_plan: risk.mitigationPlan,
+              project: risk.project,
+            });
+      
+      if (error) throw error;
+      */
+      
+      toast({
+        title: currentRisk ? "Risk Updated" : "Risk Created",
+        description: currentRisk ? "Changes saved successfully" : "New risk added successfully"
+      });
+      
+      closeRiskModal();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save risk. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    setIsSubmitting(true);
+    
+    try {
+      // In a real implementation, this would connect to Supabase
+      // Example:
+      /*
+      const { error } = await supabase
+        .from('risks')
+        .delete()
+        .eq('id', risk.id);
+      
+      if (error) throw error;
+      */
+      
+      toast({
+        title: "Risk Deleted",
+        description: "Risk has been deleted successfully",
+        variant: "destructive"
+      });
+      
+      setIsDeleteDialogOpen(false);
+      closeRiskModal();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete risk. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <Card className="w-full max-w-lg">
-        <CardHeader>
-          <CardTitle>{currentRisk ? 'Edit Risk' : 'Add Risk'}</CardTitle>
-          <CardDescription>
-            {currentRisk ? 'Edit risk details' : 'Create a new risk entry'}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4">
+    <>
+      <Dialog open={isModalOpen} onOpenChange={closeRiskModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>{currentRisk ? 'Edit Risk' : 'Add New Risk'}</DialogTitle>
+          </DialogHeader>
+          
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="risk-title" className="block text-sm font-medium mb-1">Title</label>
-              <input
-                type="text"
-                id="risk-title"
-                className="w-full p-2 border rounded-md"
-                defaultValue={currentRisk?.title}
+              <Label htmlFor="title">Title</Label>
+              <Input
+                id="title"
+                name="title"
+                value={risk.title}
+                onChange={handleChange}
+                required
+                placeholder="Risk title"
               />
             </div>
+            
             <div>
-              <label htmlFor="risk-description" className="block text-sm font-medium mb-1">Description</label>
-              <textarea
-                id="risk-description"
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                name="description"
+                value={risk.description}
+                onChange={handleChange}
+                placeholder="Describe the risk"
                 rows={3}
-                className="w-full p-2 border rounded-md"
-                defaultValue={currentRisk?.description}
-              ></textarea>
+              />
             </div>
+            
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label htmlFor="risk-impact" className="block text-sm font-medium mb-1">Impact</label>
-                <select
-                  id="risk-impact"
-                  className="w-full p-2 border rounded-md"
-                  defaultValue={currentRisk?.impact || 'medium'}
+                <Label htmlFor="impact">Impact</Label>
+                <Select
+                  value={risk.impact}
+                  onValueChange={(value) => handleSelectChange('impact', value)}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select impact" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
+              
               <div>
-                <label htmlFor="risk-probability" className="block text-sm font-medium mb-1">Probability</label>
-                <select
-                  id="risk-probability"
-                  className="w-full p-2 border rounded-md"
-                  defaultValue={currentRisk?.probability || 'medium'}
+                <Label htmlFor="probability">Probability</Label>
+                <Select
+                  value={risk.probability}
+                  onValueChange={(value) => handleSelectChange('probability', value)}
                 >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select probability" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="low">Low</SelectItem>
+                    <SelectItem value="medium">Medium</SelectItem>
+                    <SelectItem value="high">High</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
-            <div>
-              <label htmlFor="risk-mitigation" className="block text-sm font-medium mb-1">Mitigation Plan</label>
-              <textarea
-                id="risk-mitigation"
-                rows={3}
-                className="w-full p-2 border rounded-md"
-                defaultValue={currentRisk?.mitigationPlan}
-              ></textarea>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="status">Status</Label>
+                <Select
+                  value={risk.status}
+                  onValueChange={(value) => handleSelectChange('status', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="identified">Identified</SelectItem>
+                    <SelectItem value="mitigated">Mitigated</SelectItem>
+                    <SelectItem value="occurred">Occurred</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
+                <Label htmlFor="project">Project</Label>
+                <Select
+                  value={risk.project}
+                  onValueChange={(value) => handleSelectChange('project', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {projects.map(project => (
+                      <SelectItem key={project} value={project}>{project}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
+            
+            <div>
+              <Label htmlFor="mitigationPlan">Mitigation Plan</Label>
+              <Textarea
+                id="mitigationPlan"
+                name="mitigationPlan"
+                value={risk.mitigationPlan}
+                onChange={handleChange}
+                placeholder="How to mitigate this risk"
+                rows={3}
+              />
+            </div>
+            
+            <DialogFooter className="flex justify-between items-center">
+              <div>
+                {currentRisk && (
+                  <Button 
+                    type="button" 
+                    variant="destructive" 
+                    onClick={() => setIsDeleteDialogOpen(true)}
+                    disabled={isSubmitting}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={closeRiskModal}
+                  disabled={isSubmitting}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Saving...' : currentRisk ? 'Save Changes' : 'Add Risk'}
+                </Button>
+              </div>
+            </DialogFooter>
           </form>
-        </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button variant="outline" onClick={closeRiskModal}>Cancel</Button>
-          <div className="flex gap-2">
-            {currentRisk && (
-              <Button variant="destructive">Delete</Button>
-            )}
-            <Button>{currentRisk ? 'Update' : 'Create'}</Button>
-          </div>
-        </CardFooter>
-      </Card>
-    </div>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the risk from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              disabled={isSubmitting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              {isSubmitting ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

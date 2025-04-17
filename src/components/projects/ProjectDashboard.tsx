@@ -28,14 +28,14 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
   } = useProjectDashboard(project);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <ProjectDashboardHeader 
         project={project} 
         exportToPNG={exportToPNG}
         exportToPDF={exportToPDF}
       />
       
-      <div ref={dashboardRef} className="space-y-6 p-6 rounded-lg bg-gray-50 dark:bg-gray-900/40 backdrop-blur-sm border border-white/10 shadow-lg">
+      <div ref={dashboardRef} className="space-y-12 p-6 rounded-lg bg-gray-50 dark:bg-gray-900/40 backdrop-blur-sm border border-white/10 shadow-lg">
         {/* Key Metrics */}
         <KeyMetrics 
           project={project} 
@@ -43,7 +43,7 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
         />
         
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
           {/* Budget Chart */}
           <BudgetChart 
             budgetData={budgetData} 
@@ -55,8 +55,10 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
             progressData={progressData} 
             exportChartDataCSV={exportChartDataCSV} 
           />
-          
-          {/* Resource Allocation */}
+        </div>
+        
+        {/* Resource Allocation - Full Width */}
+        <div className="mt-10">
           <ResourceAllocationChart 
             resourceData={resourceData} 
             COLORS={COLORS} 
@@ -64,8 +66,10 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
           />
         </div>
         
-        {/* Project Risk Details */}
-        <RiskAssessment project={project} />
+        {/* Project Risk Details - Full Width with extra margin */}
+        <div className="mt-12 pt-4">
+          <RiskAssessment project={project} />
+        </div>
         
         <DashboardFooter />
       </div>
