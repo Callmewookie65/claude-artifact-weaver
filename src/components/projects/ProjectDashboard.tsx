@@ -9,7 +9,7 @@ import {
 } from 'recharts';
 import { 
   Download, Printer, ChartBar, ChartPie, ArrowUpRight, PencilIcon, 
-  Calendar, Users, DollarSign, Clock, AlertTriangle 
+  Calendar, Users, DollarSign, Clock, AlertTriangle, FileDown
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ProjectData } from '@/types/project';
@@ -139,17 +139,72 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
       });
     }
   };
+  
+  // Export chart data as CSV
+  const exportChartDataCSV = (chartType: string) => {
+    let data: any[] = [];
+    let filename = "";
+    let headers = "";
+    
+    switch (chartType) {
+      case 'budget':
+        data = budgetData;
+        filename = `${project.name}-budget-data-${new Date().toISOString().split('T')[0]}.csv`;
+        headers = "quarter,planned,actual\n";
+        break;
+      case 'progress':
+        data = progressData;
+        filename = `${project.name}-progress-data-${new Date().toISOString().split('T')[0]}.csv`;
+        headers = "month,progress\n";
+        break;
+      case 'resource':
+        data = resourceData;
+        filename = `${project.name}-resource-data-${new Date().toISOString().split('T')[0]}.csv`;
+        headers = "name,value\n";
+        break;
+      default:
+        toast({
+          title: "Export failed",
+          description: "Unknown chart type",
+          variant: "destructive",
+        });
+        return;
+    }
+    
+    // Convert data to CSV rows
+    const rows = data.map(item => {
+      return Object.values(item).join(',');
+    }).join('\n');
+    
+    const csvContent = `${headers}${rows}`;
+    
+    // Download CSV file
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', filename);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Data exported",
+      description: `Chart data has been exported to ${filename}`,
+    });
+  };
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold">Project Dashboard</h2>
           <p className="text-muted-foreground">
             Report generated: {new Date().toLocaleDateString()} | Project period: {
               project.startDate ? new Date(project.startDate).toLocaleDateString() : 'N/A'} - {
               project.endDate ? new Date(project.endDate).toLocaleDateString() : 'N/A'}
-            <Button variant="link" className="p-0 h-auto ml-2" asChild>
+            <Button variant="link" className="p-0 h-auto ml-2">
               <a href="#" className="inline-flex items-center">
                 <PencilIcon className="h-3 w-3 mr-1" />
                 Edit
@@ -157,7 +212,7 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
             </Button>
           </p>
         </div>
-        <div className="flex space-x-2">
+        <div className="flex flex-wrap gap-2">
           <Button onClick={exportToPNG} variant="outline" size="sm" className="bg-white/5 backdrop-blur-sm border border-white/10 shadow-md hover:bg-white/10 dark:text-white">
             <Download className="h-4 w-4 mr-2" />
             Export PNG
@@ -269,7 +324,18 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
                   </span>
                 </CardDescription>
               </div>
-              <ChartBar className="h-4 w-4 text-muted-foreground" />
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0" 
+                  onClick={() => exportChartDataCSV('budget')}
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span className="sr-only">Export data</span>
+                </Button>
+                <ChartBar className="h-4 w-4 text-muted-foreground" />
+              </div>
             </CardHeader>
             <CardContent className="h-80">
               <ChartContainer 
@@ -314,7 +380,18 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
                   </span>
                 </CardDescription>
               </div>
-              <ChartBar className="h-4 w-4 text-muted-foreground" />
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0" 
+                  onClick={() => exportChartDataCSV('progress')}
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span className="sr-only">Export data</span>
+                </Button>
+                <ChartBar className="h-4 w-4 text-muted-foreground" />
+              </div>
             </CardHeader>
             <CardContent className="h-80">
               <ChartContainer 
@@ -363,7 +440,18 @@ export const ProjectDashboard: React.FC<ProjectDashboardProps> = ({ project }) =
                   </span>
                 </CardDescription>
               </div>
-              <ChartPie className="h-4 w-4 text-muted-foreground" />
+              <div className="flex gap-1">
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="h-8 w-8 p-0" 
+                  onClick={() => exportChartDataCSV('resource')}
+                >
+                  <FileDown className="h-4 w-4" />
+                  <span className="sr-only">Export data</span>
+                </Button>
+                <ChartPie className="h-4 w-4 text-muted-foreground" />
+              </div>
             </CardHeader>
             <CardContent className="h-80">
               <ChartContainer 

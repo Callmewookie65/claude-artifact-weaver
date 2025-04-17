@@ -40,7 +40,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, se
         </TabsContent>
         
         <TabsContent value="dashboard" className="mt-6">
-          <div className="pb-16"> {/* Added padding to prevent overlap */}
+          <div className="pb-24"> {/* Increased padding to prevent overlap */}
             <ProjectDashboard project={project} />
           </div>
         </TabsContent>
@@ -50,7 +50,7 @@ export const ProjectTabs: React.FC<ProjectTabsProps> = ({ project, activeTab, se
         </TabsContent>
         
         <TabsContent value="risks" className="mt-6">
-          <div className="pb-16"> {/* Added padding to prevent overlap */}
+          <div className="pb-24"> {/* Increased padding to prevent overlap */}
             <ProjectRisks project={project} />
           </div>
         </TabsContent>

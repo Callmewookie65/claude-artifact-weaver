@@ -1,10 +1,12 @@
+
 import React, { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { AlertTriangle, Plus, Filter, PlusCircle, ArrowUpRight, Pencil } from 'lucide-react';
+import { AlertTriangle, Plus, Filter, PlusCircle, ArrowUpRight, Pencil, Download } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ProjectData } from '@/types/project';
+import { toast } from '@/hooks/use-toast';
 
 interface RiskItem {
   id: string;
@@ -133,9 +135,35 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
     setCurrentRisk(null);
   };
 
+  // Export risks as CSV
+  const exportRisksCSV = () => {
+    const headers = "id,title,description,impact,probability,status,mitigationPlan,project,createdBy,createdAt\n";
+    
+    const rows = risks.map(risk => (
+      `"${risk.id}","${risk.title.replace(/"/g, '""')}","${risk.description.replace(/"/g, '""')}","${risk.impact}","${risk.probability}","${risk.status}","${risk.mitigationPlan.replace(/"/g, '""')}","${risk.project.replace(/"/g, '""')}","${risk.createdBy}","${risk.createdAt}"`
+    )).join('\n');
+    
+    const csvContent = `${headers}${rows}`;
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.setAttribute('hidden', '');
+    a.setAttribute('href', url);
+    a.setAttribute('download', `project-${project.id}-risks.csv`);
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Risks Exported",
+      description: "Risk assessment data has been exported as CSV"
+    });
+  };
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-4 mb-10">
+      <div className="flex justify-between items-center flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold">Project Risks</h2>
           <p className="text-muted-foreground">
@@ -148,15 +176,57 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
             </Button>
           </p>
         </div>
-        <Button onClick={() => openRiskModal()}>
-          <AlertTriangle className="h-4 w-4 mr-2" />
-          Add Risk
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={exportRisksCSV}>
+            <Download className="h-4 w-4 mr-2" />
+            Export Risks
+          </Button>
+          <Button onClick={() => openRiskModal()}>
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            Add Risk
+          </Button>
+        </div>
       </div>
 
-      <Card>
+      {/* Risk summary cards */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">All Risks</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold">{risks.length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">High Risk</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-red-600">{risks.filter(risk => getRiskScore(risk) >= 6).length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Active</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-blue-600">{risks.filter(risk => risk.status === 'identified').length}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Mitigated</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-green-600">{risks.filter(risk => risk.status === 'mitigated').length}</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card className="mt-6">
         <CardHeader>
-          <div className="flex justify-between">
+          <div className="flex justify-between flex-wrap gap-2">
             <div>
               <CardTitle>Risk Matrix</CardTitle>
               <CardDescription>Current project risks assessment</CardDescription>
@@ -217,43 +287,7 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
         </CardFooter>
       </Card>
 
-      {/* Risk summary cards would go here */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">All Risks</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold">{risks.length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">High Risk</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-red-600">{risks.filter(risk => getRiskScore(risk) >= 6).length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Active</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-blue-600">{risks.filter(risk => risk.status === 'identified').length}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Mitigated</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-green-600">{risks.filter(risk => risk.status === 'mitigated').length}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Risk Modal would go here but we'll just show a placeholder for now */}
+      {/* Risk Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="w-full max-w-lg">
@@ -264,11 +298,70 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p>Risk form would go here</p>
+              <form className="space-y-4">
+                <div>
+                  <label htmlFor="risk-title" className="block text-sm font-medium mb-1">Title</label>
+                  <input
+                    type="text"
+                    id="risk-title"
+                    className="w-full p-2 border rounded-md"
+                    defaultValue={currentRisk?.title}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="risk-description" className="block text-sm font-medium mb-1">Description</label>
+                  <textarea
+                    id="risk-description"
+                    rows={3}
+                    className="w-full p-2 border rounded-md"
+                    defaultValue={currentRisk?.description}
+                  ></textarea>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label htmlFor="risk-impact" className="block text-sm font-medium mb-1">Impact</label>
+                    <select
+                      id="risk-impact"
+                      className="w-full p-2 border rounded-md"
+                      defaultValue={currentRisk?.impact || 'medium'}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label htmlFor="risk-probability" className="block text-sm font-medium mb-1">Probability</label>
+                    <select
+                      id="risk-probability"
+                      className="w-full p-2 border rounded-md"
+                      defaultValue={currentRisk?.probability || 'medium'}
+                    >
+                      <option value="low">Low</option>
+                      <option value="medium">Medium</option>
+                      <option value="high">High</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label htmlFor="risk-mitigation" className="block text-sm font-medium mb-1">Mitigation Plan</label>
+                  <textarea
+                    id="risk-mitigation"
+                    rows={3}
+                    className="w-full p-2 border rounded-md"
+                    defaultValue={currentRisk?.mitigationPlan}
+                  ></textarea>
+                </div>
+              </form>
             </CardContent>
             <CardFooter className="flex justify-between">
               <Button variant="outline" onClick={closeRiskModal}>Cancel</Button>
-              <Button>{currentRisk ? 'Update' : 'Create'}</Button>
+              <div className="flex gap-2">
+                {currentRisk && (
+                  <Button variant="destructive">Delete</Button>
+                )}
+                <Button>{currentRisk ? 'Update' : 'Create'}</Button>
+              </div>
             </CardFooter>
           </Card>
         </div>
