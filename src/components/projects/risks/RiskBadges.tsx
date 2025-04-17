@@ -3,7 +3,7 @@ import React from 'react';
 import { Badge } from '@/components/ui/badge';
 import { RiskItem } from './types';
 
-export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
+export const RiskBadges = ({ getRiskScore }: { getRiskScore: (risk: RiskItem) => number }) => {
   // Get risk level badge
   const getRiskLevelBadge = (impact: string, probability: string) => {
     const score = getRiskScore({ impact, probability } as RiskItem);

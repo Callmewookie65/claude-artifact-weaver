@@ -1,3 +1,4 @@
+
 import React, { useState, useContext, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from "@/hooks/use-toast";
@@ -49,6 +50,28 @@ export default function ProjectDetailPage() {
       setProject(defaultProject);
     }
   }, [id, projects]);
+  
+  // Update project data function
+  const updateProject = (updatedData: Partial<ProjectData>) => {
+    if (!project) return;
+    
+    const updatedProject = {
+      ...project,
+      ...updatedData
+    };
+    
+    setProject(updatedProject);
+    
+    // Update in global context
+    setProjects(prevProjects => 
+      prevProjects.map(p => p.id === id ? updatedProject : p)
+    );
+    
+    toast({
+      title: "Project Updated",
+      description: "Project information has been updated successfully."
+    });
+  };
   
   const handleImportCSV = (data: ProjectData[]) => {
     const importedProject = data.find(p => p.id === id) || data[0];

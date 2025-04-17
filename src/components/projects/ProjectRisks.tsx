@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { RiskHeader } from './risks/RiskHeader';
 import { RiskSummary } from './risks/RiskSummary';
 import { RiskList } from './risks/RiskList';
@@ -47,7 +47,9 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
     currentRisk,
     getRiskScore,
     openRiskModal,
-    closeRiskModal
+    closeRiskModal,
+    saveRisk,
+    deleteRisk
   } = useRiskManagement(initialRisks);
 
   return (
@@ -71,6 +73,8 @@ export const ProjectRisks: React.FC<ProjectRisksProps> = ({ project }) => {
         closeRiskModal={closeRiskModal}
         currentRisk={currentRisk}
         projects={[project.name]}
+        onSave={saveRisk}
+        onDelete={deleteRisk}
       />
     </div>
   );

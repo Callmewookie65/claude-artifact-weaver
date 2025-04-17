@@ -1,167 +1,259 @@
 
 import React, { useState } from 'react';
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
-import { Users, Plus, UserPlus } from 'lucide-react';
 import { ProjectData, ProjectTeamMember } from '@/types/project';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { UserPlus, Edit2, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface ProjectTeamProps {
   project: ProjectData;
+  updateProject?: (updatedProject: Partial<ProjectData>) => void;
 }
 
-export const ProjectTeam: React.FC<ProjectTeamProps> = ({ project }) => {
-  const [teamMembers, setTeamMembers] = useState(project.team || []);
-  const [newMember, setNewMember] = useState({ name: '', role: '', avatar: '' });
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
-
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase();
+export const ProjectTeam: React.FC<ProjectTeamProps> = ({ project, updateProject }) => {
+  const [team, setTeam] = useState<ProjectTeamMember[]>(project.team || []);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentMember, setCurrentMember] = useState<ProjectTeamMember | null>(null);
+  const [formData, setFormData] = useState<Partial<ProjectTeamMember>>({
+    name: '',
+    role: '',
+    avatar: ''
+  });
+  
+  // Open member modal for editing or creating
+  const openMemberModal = (member: ProjectTeamMember | null = null) => {
+    if (member) {
+      setCurrentMember(member);
+      setFormData({
+        name: member.name,
+        role: member.role,
+        avatar: member.avatar
+      });
+    } else {
+      setCurrentMember(null);
+      setFormData({
+        name: '',
+        role: 'Developer',
+        avatar: ''
+      });
+    }
+    setIsModalOpen(true);
   };
-
-  const handleAddMember = () => {
-    if (!newMember.name || !newMember.role) {
+  
+  // Handle form changes
+  const handleChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+  
+  // Generate avatar from name
+  const generateAvatarFromName = (name: string) => {
+    if (!name) return '';
+    
+    const nameParts = name.split(' ');
+    if (nameParts.length >= 2) {
+      return (nameParts[0][0] + nameParts[1][0]).toUpperCase();
+    }
+    return nameParts[0].substring(0, 2).toUpperCase();
+  };
+  
+  // Handle form submission
+  const handleSubmit = () => {
+    if (!formData.name) {
       toast({
-        title: "Validation Error",
-        description: "Name and role are required",
+        title: "Error",
+        description: "Member name is required",
         variant: "destructive"
       });
       return;
     }
-
-    const avatar = newMember.avatar || getInitials(newMember.name);
     
-    const newTeamMember: ProjectTeamMember = {
-      id: Date.now().toString(),
-      name: newMember.name,
-      role: newMember.role,
-      avatar
-    };
-
-    setTeamMembers([...teamMembers, newTeamMember]);
-    setNewMember({ name: '', role: '', avatar: '' });
-    setIsDialogOpen(false);
+    const avatar = formData.avatar || generateAvatarFromName(formData.name);
     
-    toast({
-      title: "Team Member Added",
-      description: `${newMember.name} has been added to the team`
-    });
+    if (currentMember) {
+      // Update existing member
+      const updatedMember = {
+        ...currentMember,
+        ...formData,
+        avatar
+      } as ProjectTeamMember;
+      
+      const updatedTeam = team.map(member => 
+        member.id === currentMember.id ? updatedMember : member
+      );
+      
+      setTeam(updatedTeam);
+      
+      if (updateProject) {
+        updateProject({ team: updatedTeam });
+      }
+      
+      toast({
+        title: "Team Member Updated",
+        description: "Team member has been updated successfully"
+      });
+    } else {
+      // Create new member
+      const newMember: ProjectTeamMember = {
+        id: Date.now().toString(),
+        name: formData.name || '',
+        role: formData.role || 'Developer',
+        avatar: avatar
+      };
+      
+      const updatedTeam = [...team, newMember];
+      setTeam(updatedTeam);
+      
+      if (updateProject) {
+        updateProject({ team: updatedTeam });
+      }
+      
+      toast({
+        title: "Team Member Added",
+        description: "New team member has been added successfully"
+      });
+    }
+    
+    setIsModalOpen(false);
   };
-
-  const handleDeleteMember = (id: string) => {
-    const updatedTeam = teamMembers.filter(member => member.id !== id);
-    setTeamMembers(updatedTeam);
-    
-    toast({
-      title: "Team Member Removed",
-      description: "Team member has been removed successfully"
-    });
+  
+  // Delete member
+  const handleDelete = () => {
+    if (currentMember) {
+      const updatedTeam = team.filter(member => member.id !== currentMember.id);
+      setTeam(updatedTeam);
+      
+      if (updateProject) {
+        updateProject({ team: updatedTeam });
+      }
+      
+      toast({
+        title: "Team Member Removed",
+        description: "Team member has been removed successfully",
+        variant: "destructive"
+      });
+      setIsModalOpen(false);
+    }
   };
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <div>
-          <CardTitle>Team</CardTitle>
-          <CardDescription>Project team members</CardDescription>
-        </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Member
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Team Member</DialogTitle>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">
-                  Name
-                </Label>
-                <Input
-                  id="name"
-                  value={newMember.name}
-                  onChange={(e) => setNewMember({...newMember, name: e.target.value})}
-                  className="col-span-3"
-                  placeholder="John Doe"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="role" className="text-right">
-                  Role
-                </Label>
-                <Input
-                  id="role"
-                  value={newMember.role}
-                  onChange={(e) => setNewMember({...newMember, role: e.target.value})}
-                  className="col-span-3"
-                  placeholder="Developer"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="avatar" className="text-right">
-                  Initials
-                </Label>
-                <Input
-                  id="avatar"
-                  value={newMember.avatar}
-                  onChange={(e) => setNewMember({...newMember, avatar: e.target.value})}
-                  className="col-span-3"
-                  placeholder="JD (optional)"
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-              <Button onClick={handleAddMember}>Add Team Member</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {teamMembers.map(member => (
-            <div key={member.id} className="p-4 border border-gray-200 rounded-lg flex items-center justify-between space-x-3">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold">
+    <>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Project Team</CardTitle>
+            <CardDescription>Team members and roles</CardDescription>
+          </div>
+          <Button onClick={() => openMemberModal()}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Add Team Member
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {team.map(member => (
+              <div 
+                key={member.id} 
+                className="p-4 border border-gray-200 rounded-lg flex items-center space-x-4 hover:border-gray-300 hover:bg-gray-50 cursor-pointer transition-colors"
+                onClick={() => openMemberModal(member)}
+              >
+                <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-lg">
                   {member.avatar}
                 </div>
                 <div>
                   <p className="font-medium">{member.name}</p>
-                  <p className="text-sm text-muted-foreground">{member.role}</p>
+                  <p className="text-sm text-gray-500">{member.role}</p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="text-red-500 hover:text-red-700" 
-                onClick={() => handleDeleteMember(member.id)}
+            ))}
+            {team.length === 0 && (
+              <div className="col-span-3 flex items-center justify-center h-32 border-2 border-dashed border-gray-300 rounded-lg">
+                <p className="text-gray-500">No team members added yet</p>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Team Member Modal */}
+      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{currentMember ? 'Edit Team Member' : 'Add Team Member'}</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="member-name">Name</Label>
+              <Input
+                id="member-name"
+                value={formData.name || ''}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="Team member name"
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="member-role">Role</Label>
+              <Select
+                value={formData.role || 'Developer'}
+                onValueChange={(value) => handleChange('role', value)}
               >
-                Remove
+                <SelectTrigger id="member-role">
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Project Manager">Project Manager</SelectItem>
+                  <SelectItem value="Designer">Designer</SelectItem>
+                  <SelectItem value="Developer">Developer</SelectItem>
+                  <SelectItem value="QA Engineer">QA Engineer</SelectItem>
+                  <SelectItem value="Business Analyst">Business Analyst</SelectItem>
+                  <SelectItem value="Content Manager">Content Manager</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="member-avatar">Avatar Initials (Optional)</Label>
+              <Input
+                id="member-avatar"
+                value={formData.avatar || ''}
+                onChange={(e) => handleChange('avatar', e.target.value)}
+                placeholder="e.g. JD"
+                maxLength={2}
+              />
+              <p className="text-xs text-gray-500">
+                Leave empty to generate from name
+              </p>
+            </div>
+          </div>
+          <DialogFooter className="flex justify-between items-center">
+            <div>
+              {currentMember && (
+                <Button 
+                  variant="destructive" 
+                  onClick={handleDelete}
+                  size="sm"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  Remove
+                </Button>
+              )}
+            </div>
+            <div className="flex space-x-2">
+              <Button variant="outline" onClick={() => setIsModalOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSubmit}>
+                {currentMember ? 'Update' : 'Add Member'}
               </Button>
             </div>
-          ))}
-          {teamMembers.length === 0 && (
-            <div className="col-span-3 text-center p-4 border border-dashed rounded">
-              <p className="text-muted-foreground">No team members assigned</p>
-              <Button variant="link" onClick={() => setIsDialogOpen(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Add your first team member
-              </Button>
-            </div>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 };

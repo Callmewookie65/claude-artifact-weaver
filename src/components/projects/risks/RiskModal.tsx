@@ -9,16 +9,24 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { RiskItem } from './types';
-import { supabase } from '@/integrations/supabase/client';
 
 interface RiskModalProps {
   isModalOpen: boolean;
   closeRiskModal: () => void;
   currentRisk: RiskItem | null;
   projects: string[];
+  onSave?: (risk: RiskItem) => void;
+  onDelete?: () => void;
 }
 
-export const RiskModal: React.FC<RiskModalProps> = ({ isModalOpen, closeRiskModal, currentRisk, projects }) => {
+export const RiskModal: React.FC<RiskModalProps> = ({ 
+  isModalOpen, 
+  closeRiskModal, 
+  currentRisk, 
+  projects,
+  onSave,
+  onDelete
+}) => {
   const [risk, setRisk] = useState<RiskItem>({
     id: '',
     title: '',
@@ -68,38 +76,24 @@ export const RiskModal: React.FC<RiskModalProps> = ({ isModalOpen, closeRiskModa
     setIsSubmitting(true);
     
     try {
-      // In a real implementation, this would connect to Supabase
-      // For now, just simulate a successful save
+      if (!risk.title) {
+        toast({
+          title: "Error",
+          description: "Risk title is required",
+          variant: "destructive"
+        });
+        setIsSubmitting(false);
+        return;
+      }
       
-      // Example of how Supabase integration would work:
-      /*
-      const { data, error } = currentRisk 
-        ? await supabase
-            .from('risks')
-            .update({
-              title: risk.title,
-              description: risk.description,
-              impact: risk.impact,
-              probability: risk.probability,
-              status: risk.status,
-              mitigation_plan: risk.mitigationPlan,
-              project: risk.project,
-            })
-            .eq('id', risk.id)
-        : await supabase
-            .from('risks')
-            .insert({
-              title: risk.title,
-              description: risk.description,
-              impact: risk.impact,
-              probability: risk.probability,
-              status: risk.status,
-              mitigation_plan: risk.mitigationPlan,
-              project: risk.project,
-            });
+      const riskToSave = {
+        ...risk,
+        id: risk.id || Date.now().toString(),
+      };
       
-      if (error) throw error;
-      */
+      if (onSave) {
+        onSave(riskToSave);
+      }
       
       toast({
         title: currentRisk ? "Risk Updated" : "Risk Created",
@@ -122,16 +116,9 @@ export const RiskModal: React.FC<RiskModalProps> = ({ isModalOpen, closeRiskModa
     setIsSubmitting(true);
     
     try {
-      // In a real implementation, this would connect to Supabase
-      // Example:
-      /*
-      const { error } = await supabase
-        .from('risks')
-        .delete()
-        .eq('id', risk.id);
-      
-      if (error) throw error;
-      */
+      if (onDelete) {
+        onDelete();
+      }
       
       toast({
         title: "Risk Deleted",
