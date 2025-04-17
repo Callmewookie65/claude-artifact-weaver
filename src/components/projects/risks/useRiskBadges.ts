@@ -1,6 +1,7 @@
 
 import { Badge } from '@/components/ui/badge';
 import { RiskItem } from './types';
+import React from 'react';
 
 export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
   // Get risk level badge
@@ -8,11 +9,11 @@ export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
     const score = getRiskScore({ impact, probability } as RiskItem);
     
     if (score >= 6) {
-      return <Badge variant="destructive">Wysoki</Badge>;
+      return React.createElement(Badge, { variant: "destructive" }, "Wysoki");
     } else if (score >= 3) {
-      return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
+      return React.createElement(Badge, { variant: "secondary", className: "bg-yellow-500" }, "Średni");
     } else {
-      return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
+      return React.createElement(Badge, { variant: "outline", className: "bg-green-500 text-white" }, "Niski");
     }
   };
   
@@ -20,13 +21,13 @@ export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
   const getImpactBadge = (impact: string) => {
     switch(impact) {
       case 'low':
-        return <Badge variant="outline" className="bg-green-500 text-white">Niski</Badge>;
+        return React.createElement(Badge, { variant: "outline", className: "bg-green-500 text-white" }, "Niski");
       case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-500">Średni</Badge>;
+        return React.createElement(Badge, { variant: "secondary", className: "bg-yellow-500" }, "Średni");
       case 'high':
-        return <Badge variant="destructive">Wysoki</Badge>;
+        return React.createElement(Badge, { variant: "destructive" }, "Wysoki");
       default:
-        return <Badge variant="outline">{impact}</Badge>;
+        return React.createElement(Badge, { variant: "outline" }, impact);
     }
   };
   
@@ -34,13 +35,13 @@ export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
   const getProbabilityBadge = (probability: string) => {
     switch(probability) {
       case 'low':
-        return <Badge variant="outline" className="bg-green-500 text-white">Niskie</Badge>;
+        return React.createElement(Badge, { variant: "outline", className: "bg-green-500 text-white" }, "Niskie");
       case 'medium':
-        return <Badge variant="secondary" className="bg-yellow-500">Średnie</Badge>;
+        return React.createElement(Badge, { variant: "secondary", className: "bg-yellow-500" }, "Średnie");
       case 'high':
-        return <Badge variant="destructive">Wysokie</Badge>;
+        return React.createElement(Badge, { variant: "destructive" }, "Wysokie");
       default:
-        return <Badge variant="outline">{probability}</Badge>;
+        return React.createElement(Badge, { variant: "outline" }, probability);
     }
   };
   
@@ -48,13 +49,13 @@ export const useRiskBadges = (getRiskScore: (risk: RiskItem) => number) => {
   const getStatusBadge = (status: string) => {
     switch(status) {
       case 'identified':
-        return <Badge className="bg-blue-500 text-white">Zidentyfikowane</Badge>;
+        return React.createElement(Badge, { className: "bg-blue-500 text-white" }, "Zidentyfikowane");
       case 'mitigated':
-        return <Badge variant="outline" className="bg-green-500 text-white">Zminimalizowane</Badge>;
+        return React.createElement(Badge, { variant: "outline", className: "bg-green-500 text-white" }, "Zminimalizowane");
       case 'occurred':
-        return <Badge variant="destructive">Wystąpiło</Badge>;
+        return React.createElement(Badge, { variant: "destructive" }, "Wystąpiło");
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return React.createElement(Badge, { variant: "outline" }, status);
     }
   };
 
