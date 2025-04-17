@@ -13,7 +13,7 @@ interface RiskAssessmentProps {
 
 export const RiskAssessment: React.FC<RiskAssessmentProps> = ({ project }) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [riskLevel, setRiskLevel] = useState(project.riskLevel || 'medium');
+  const [riskLevel, setRiskLevel] = useState<'low' | 'medium' | 'high'>(project.riskLevel as 'low' | 'medium' | 'high' || 'medium');
   
   const handleSaveRisk = () => {
     // This would connect to the backend in a real implementation
@@ -69,7 +69,10 @@ export const RiskAssessment: React.FC<RiskAssessmentProps> = ({ project }) => {
             <div>
               <p className="font-medium">Overall Risk Level</p>
               {isEditing ? (
-                <Select value={riskLevel} onValueChange={setRiskLevel}>
+                <Select
+                  value={riskLevel}
+                  onValueChange={(value: 'low' | 'medium' | 'high') => setRiskLevel(value)}
+                >
                   <SelectTrigger className="w-40">
                     <SelectValue placeholder="Select risk level" />
                   </SelectTrigger>
