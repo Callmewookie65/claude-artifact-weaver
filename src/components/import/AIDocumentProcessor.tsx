@@ -1,388 +1,594 @@
 
-import React, { useState } from 'react';
-import { toast } from "@/hooks/use-toast";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { FileUp, CheckCircle, AlertCircle, FileText } from "lucide-react";
-import { ProjectData } from "@/types/project";
-import Papa from 'papaparse';
-import { processProjectImport, processBudgetImport, updateProjectBudgets } from '@/utils/csvExport';
-import { processTasks } from '@/utils/taskImport';
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Card, CardContent } from '@/components/ui/card';
+import { Sparkles, Check, AlertCircle, Loader2, FileText, Download } from 'lucide-react';
+import { 
+  DocumentProcessingService,
+  DocumentProcessingResult 
+} from '@/services/DocumentProcessingService';
+import { ProjectData } from '@/types/project';
+import { toast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
-interface AIDocumentProcessorProps {
-  onProjectUpdate?: (project: ProjectData) => void;
-  onBudgetUpdate?: (budgetMap: Record<string, { used: number; total: number }>) => void;
-  onTasksImport?: (tasks: any[]) => void;
+export interface AIDocumentProcessorProps {
+  onProjectUpdate: (project: ProjectData) => void;
+  onBudgetUpdate: (budgetMap: Record<string, { used: number; total: number }>) => void;
+  onTasksImport: (tasks: any[]) => void;
+  projects: ProjectData[];
 }
 
-export const AIDocumentProcessor: React.FC<AIDocumentProcessorProps> = ({ 
-  onProjectUpdate, 
+export function AIDocumentProcessor({
+  onProjectUpdate,
   onBudgetUpdate,
-  onTasksImport 
-}) => {
+  onTasksImport,
+  projects
+}: AIDocumentProcessorProps) {
   const [file, setFile] = useState<File | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [processingStage, setProcessingStage] = useState('');
-  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFile = event.target.files?.[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setResult(null);
+  const [processingResult, setProcessingResult] = useState<DocumentProcessingResult | null>(null);
+  const [showMatchDialog, setShowMatchDialog] = useState(false);
+  const [selectedProjectId, setSelectedProjectId] = useState<string>('');
+  const [projectMatches, setProjectMatches] = useState<Array<{projectId: string, name: string, similarity: number}>>([]);
+  const [isCreatingNewProject, setIsCreatingNewProject] = useState(false);
+  
+  // Reset state when processing a new file
+  useEffect(() => {
+    if (file) {
+      setProcessingResult(null);
+      setProgress(0);
+      setSelectedProjectId('');
+      setProjectMatches([]);
+      setIsCreatingNewProject(false);
+    }
+  }, [file]);
+  
+  // Handle file upload
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files && event.target.files[0]) {
+      setFile(event.target.files[0]);
     }
   };
-
-  const detectDocumentType = async (fileContent: string, fileName: string): Promise<string> => {
-    setProcessingStage('Detecting document type...');
-    setProgress(30);
-    
-    // Simple detection logic based on column names or content patterns
-    const lowerFileName = fileName.toLowerCase();
-    
-    if (lowerFileName.includes('budget') || fileContent.includes('budget') || 
-        fileContent.includes('spent') || fileContent.includes('remaining')) {
-      return 'budget';
+  
+  // Handle file dropping
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    if (event.dataTransfer.files && event.dataTransfer.files[0]) {
+      setFile(event.dataTransfer.files[0]);
     }
-    
-    if (lowerFileName.includes('jira') || lowerFileName.includes('task') || 
-        fileContent.includes('story points') || fileContent.includes('assignee')) {
-      return 'tasks';
-    }
-    
-    if (lowerFileName.includes('charter') || lowerFileName.includes('project') || 
-        fileContent.includes('objective') || fileContent.includes('scope')) {
-      return 'project';
-    }
-    
-    // Default to project if we can't determine
-    return 'project';
   };
-
+  
+  // Prevent default behavior for drag events
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+  };
+  
+  // Process the uploaded file
   const processFile = async () => {
     if (!file) return;
     
-    setIsProcessing(true);
-    setProgress(10);
-    setProcessingStage('Reading file...');
-    setResult(null);
-    
     try {
-      const fileText = await file.text();
-      const documentType = await detectDocumentType(fileText, file.name);
+      setIsProcessing(true);
+      setProgress(10);
       
-      setProcessingStage(`Processing ${documentType} document...`);
-      setProgress(50);
+      // Simulate progress updates
+      const progressInterval = setInterval(() => {
+        setProgress(prev => {
+          if (prev < 90) {
+            return prev + 10;
+          }
+          return prev;
+        });
+      }, 500);
       
-      if (file.type === 'application/json' || file.name.endsWith('.json')) {
-        await processJsonFile(fileText, documentType);
-      } else {
-        await processCsvFile(fileText, documentType);
-      }
+      // Process the document
+      const result = await DocumentProcessingService.processDocument(file);
+      setProcessingResult(result);
       
       setProgress(100);
-      setProcessingStage('Processing complete!');
-      setResult({ 
-        success: true, 
-        message: `Successfully processed ${documentType} document and updated project information` 
-      });
+      clearInterval(progressInterval);
       
-      toast({
-        title: "Document Processed Successfully",
-        description: `The ${documentType} document has been processed and project information has been updated.`,
-      });
+      // Find potential project matches
+      if (result.documentType !== 'unknown') {
+        const { projectMatches } = DocumentProcessingService.matchToExistingProjects(result, projects);
+        
+        if (projectMatches.length > 0) {
+          setProjectMatches(projectMatches);
+          setSelectedProjectId(projectMatches[0].projectId);
+          setShowMatchDialog(true);
+        } else if (result.documentType === 'project' && result.projectData) {
+          // If it's a project doc with no matches, create a new project
+          handleCreateNewProject();
+        } else {
+          // For task/budget docs with no matches, prompt user
+          setShowMatchDialog(true);
+        }
+      } else {
+        toast({
+          title: "Unknown Document Type",
+          description: "The system couldn't determine the type of this document.",
+          variant: "destructive"
+        });
+      }
     } catch (error) {
-      console.error("Error processing document:", error);
-      setResult({ 
-        success: false, 
-        message: `Error processing document: ${error instanceof Error ? error.message : 'Unknown error'}` 
-      });
-      
+      console.error("Processing error:", error);
       toast({
-        title: "Error Processing Document",
-        description: error instanceof Error ? error.message : 'An unknown error occurred',
+        title: "Processing Failed",
+        description: error instanceof Error ? error.message : "Failed to process document",
         variant: "destructive"
       });
     } finally {
       setIsProcessing(false);
     }
   };
-
-  const processCsvFile = async (fileText: string, documentType: string) => {
-    return new Promise<void>((resolve, reject) => {
-      Papa.parse(fileText, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (results) => {
-          try {
-            if (results.data.length === 0) {
-              reject(new Error('No data found in the CSV file'));
-              return;
-            }
-            
-            setProgress(70);
-            
-            switch (documentType) {
-              case 'budget':
-                const budgetMap = processBudgetImport(results.data as any[]);
-                if (onBudgetUpdate) {
-                  onBudgetUpdate(budgetMap);
-                }
-                break;
-              
-              case 'tasks':
-                const tasks = processTasks(results.data as any[]);
-                if (onTasksImport) {
-                  onTasksImport(tasks);
-                }
-                break;
-              
-              case 'project':
-              default:
-                const projects = processProjectImport(results.data as any[]);
-                if (projects.length > 0 && onProjectUpdate) {
-                  onProjectUpdate(projects[0]);
-                }
-                break;
-            }
-            
-            setProgress(90);
-            resolve();
-          } catch (error) {
-            reject(error);
-          }
-        },
-        error: (error) => {
-          reject(new Error(`CSV parsing error: ${error.message}`));
-        }
-      });
-    });
-  };
-
-  const processJsonFile = async (fileText: string, documentType: string) => {
+  
+  // Handle applying changes to selected project
+  const handleApplyToProject = () => {
+    if (!processingResult) return;
+    
     try {
-      const jsonData = JSON.parse(fileText);
-      
-      setProgress(70);
-      
-      const dataArray = Array.isArray(jsonData) ? jsonData : [jsonData];
-      
-      switch (documentType) {
-        case 'budget':
-          const budgetMap: Record<string, { used: number; total: number }> = {};
+      if (processingResult.documentType === 'project' && processingResult.projectData) {
+        // For project documents, update the selected project
+        const existingProject = projects.find(p => p.id === selectedProjectId);
+        
+        if (existingProject) {
+          const updatedProject = {
+            ...existingProject,
+            ...processingResult.projectData,
+            id: existingProject.id // Keep the original ID
+          };
           
-          dataArray.forEach(item => {
-            const id = item.projectId || item.project_id || item.id;
-            if (id) {
-              budgetMap[id] = {
-                total: Number(item.budget || item.total || 0),
-                used: Number(item.spent || item.used || 0)
-              };
-            }
+          onProjectUpdate(updatedProject);
+          
+          toast({
+            title: "Project Updated",
+            description: `Updated project: ${existingProject.name}`
           });
+        }
+      } else if (processingResult.documentType === 'budget' && processingResult.budgetData) {
+        // For budget documents, update budgets
+        const budgetMap = processingResult.budgetData;
+        
+        // Update with project ID if needed
+        const existingProject = projects.find(p => p.id === selectedProjectId);
+        
+        if (existingProject && Object.keys(budgetMap).length > 0) {
+          // Try to find the budget entry for this project
+          const budgetEntry = Object.entries(budgetMap)[0];
           
-          if (onBudgetUpdate) {
-            onBudgetUpdate(budgetMap);
+          // Apply this budget to the selected project
+          const updatedBudgetMap = {
+            [selectedProjectId]: budgetEntry[1]
+          };
+          
+          onBudgetUpdate(updatedBudgetMap);
+          
+          toast({
+            title: "Budget Updated",
+            description: `Updated budget for project: ${existingProject.name}`
+          });
+        } else {
+          onBudgetUpdate(budgetMap);
+          
+          toast({
+            title: "Budgets Updated",
+            description: `Updated budgets for ${Object.keys(budgetMap).length} projects`
+          });
+        }
+      } else if (processingResult.documentType === 'task' && processingResult.taskData) {
+        // For task documents, import tasks
+        let tasks = processingResult.taskData;
+        
+        // If a project was selected, associate tasks with it
+        if (selectedProjectId) {
+          const existingProject = projects.find(p => p.id === selectedProjectId);
+          if (existingProject) {
+            tasks = tasks.map(task => ({
+              ...task,
+              project: existingProject.name,
+              projectId: existingProject.id
+            }));
           }
-          break;
-          
-        case 'tasks':
-          const tasks = dataArray.map(item => ({
-            title: item.title || item.summary || item.name || 'Untitled Task',
-            description: item.description || item.desc || '',
-            status: mapTaskStatus(item.status),
-            priority: mapTaskPriority(item.priority),
-            project_id: item.project_id || item.projectId || item.project || '',
-            assignee: item.assignee || item.assigned_to || '',
-            due_date: item.due_date || item.dueDate || item.deadline || ''
-          }));
-          
-          if (onTasksImport) {
-            onTasksImport(tasks);
-          }
-          break;
-          
-        case 'project':
-        default:
-          const projectData: Partial<ProjectData> = mapJsonToProjectData(dataArray[0]);
-          
-          if (onProjectUpdate) {
-            onProjectUpdate(projectData as ProjectData);
-          }
-          break;
+        }
+        
+        onTasksImport(tasks);
+        
+        toast({
+          title: "Tasks Imported",
+          description: `Imported ${tasks.length} tasks`
+        });
       }
-      
-      setProgress(90);
     } catch (error) {
-      throw new Error(`JSON processing error: ${error instanceof Error ? error.message : 'Invalid JSON format'}`);
+      console.error("Apply error:", error);
+      toast({
+        title: "Apply Failed",
+        description: error instanceof Error ? error.message : "Failed to apply changes",
+        variant: "destructive"
+      });
+    } finally {
+      setShowMatchDialog(false);
+      setFile(null);
+      setProcessingResult(null);
     }
   };
-
-  const mapTaskStatus = (status: string): string => {
-    if (!status) return 'todo';
+  
+  // Handle creating a new project
+  const handleCreateNewProject = () => {
+    if (!processingResult || !processingResult.projectData) return;
     
-    const lowerStatus = status.toLowerCase();
-    
-    if (lowerStatus.includes('done') || lowerStatus.includes('complete')) {
-      return 'done';
+    try {
+      // Generate a new ID if not present
+      const newProject: ProjectData = {
+        ...processingResult.projectData,
+        id: processingResult.projectData.id || String(Math.floor(Math.random() * 10000) + 1000),
+        status: processingResult.projectData.status || 'active',
+        progress: processingResult.projectData.progress || 0,
+      } as ProjectData;
+      
+      onProjectUpdate(newProject);
+      
+      toast({
+        title: "Project Created",
+        description: `Created new project: ${newProject.name}`
+      });
+    } catch (error) {
+      console.error("Create project error:", error);
+      toast({
+        title: "Create Project Failed",
+        description: error instanceof Error ? error.message : "Failed to create project",
+        variant: "destructive"
+      });
+    } finally {
+      setShowMatchDialog(false);
+      setFile(null);
+      setProcessingResult(null);
     }
-    
-    if (lowerStatus.includes('progress') || lowerStatus.includes('doing') || lowerStatus.includes('in')) {
-      return 'inProgress';
-    }
-    
-    return 'todo';
   };
-
-  const mapTaskPriority = (priority: string): string => {
-    if (!priority) return 'medium';
-    
-    const lowerPriority = priority.toLowerCase();
-    
-    if (lowerPriority.includes('high') || lowerPriority.includes('critical') || lowerPriority.includes('urgent')) {
-      return 'high';
+  
+  // Get document type label
+  const getDocumentTypeLabel = (type: string) => {
+    switch (type) {
+      case 'project': return 'Project Information';
+      case 'task': return 'Task Data';
+      case 'budget': return 'Budget Information';
+      default: return 'Unknown Document Type';
     }
-    
-    if (lowerPriority.includes('low') || lowerPriority.includes('minor')) {
-      return 'low';
-    }
-    
-    return 'medium';
   };
-
-  const mapJsonToProjectData = (json: any): Partial<ProjectData> => {
-    // Extract project data with fallbacks for different naming conventions
-    return {
-      name: json.name || json.project_name || json.title || 'Untitled Project',
-      client: json.client || json.customer || json.organization || json.company || 'Unknown Client',
-      status: mapProjectStatus(json.status),
-      description: json.description || json.desc || json.overview || json.summary || '',
-      progress: Number(json.progress || json.completion || json.percent_complete || 0),
-      budget: {
-        total: Number(json.budget?.total || json.budget || json.total_budget || 0),
-        used: Number(json.budget?.used || json.spent || json.used_budget || 0)
-      },
-      riskLevel: mapRiskLevel(json.risk_level || json.risk || json.riskLevel),
-      startDate: json.start_date || json.startDate || json.start || '',
-      endDate: json.end_date || json.endDate || json.deadline || '',
-      id: json.id || json.project_id || String(Math.floor(Math.random() * 10000))
-    };
-  };
-
-  const mapProjectStatus = (status: string): 'active' | 'completed' | 'onHold' | 'atRisk' => {
-    if (!status) return 'active';
+  
+  // Render the result preview based on document type
+  const renderResultPreview = () => {
+    if (!processingResult) return null;
     
-    const lowerStatus = status.toLowerCase();
-    
-    if (lowerStatus.includes('complet') || lowerStatus.includes('done') || lowerStatus.includes('finish')) {
-      return 'completed';
+    switch (processingResult.documentType) {
+      case 'project':
+        return (
+          <div className="mt-4 bg-secondary/20 p-4 rounded-md">
+            <h3 className="text-lg font-bold">Detected Project Data</h3>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <div className="text-sm text-muted-foreground">Name:</div>
+              <div className="text-sm font-medium">{processingResult.projectData?.name}</div>
+              
+              <div className="text-sm text-muted-foreground">Client:</div>
+              <div className="text-sm font-medium">{processingResult.projectData?.client}</div>
+              
+              <div className="text-sm text-muted-foreground">Status:</div>
+              <div className="text-sm font-medium">{processingResult.projectData?.status}</div>
+              
+              <div className="text-sm text-muted-foreground">Progress:</div>
+              <div className="text-sm font-medium">{processingResult.projectData?.progress}%</div>
+              
+              {processingResult.projectData?.budget && (
+                <>
+                  <div className="text-sm text-muted-foreground">Budget Used:</div>
+                  <div className="text-sm font-medium">{processingResult.projectData?.budget?.used}</div>
+                  
+                  <div className="text-sm text-muted-foreground">Budget Total:</div>
+                  <div className="text-sm font-medium">{processingResult.projectData?.budget?.total}</div>
+                </>
+              )}
+            </div>
+          </div>
+        );
+        
+      case 'task':
+        return (
+          <div className="mt-4 bg-secondary/20 p-4 rounded-md">
+            <h3 className="text-lg font-bold">Detected Tasks</h3>
+            <p className="text-sm text-muted-foreground">Found {processingResult.taskData?.length} tasks</p>
+            {processingResult.taskData && processingResult.taskData.length > 0 && (
+              <div className="mt-2">
+                <h4 className="text-sm font-medium">First Task:</h4>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div className="text-sm text-muted-foreground">Title:</div>
+                  <div className="text-sm font-medium">{processingResult.taskData[0].title}</div>
+                  
+                  <div className="text-sm text-muted-foreground">Status:</div>
+                  <div className="text-sm font-medium">{processingResult.taskData[0].status}</div>
+                  
+                  <div className="text-sm text-muted-foreground">Priority:</div>
+                  <div className="text-sm font-medium">{processingResult.taskData[0].priority}</div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        
+      case 'budget':
+        return (
+          <div className="mt-4 bg-secondary/20 p-4 rounded-md">
+            <h3 className="text-lg font-bold">Detected Budget Data</h3>
+            <p className="text-sm text-muted-foreground">
+              Found budget information for {processingResult.budgetData ? Object.keys(processingResult.budgetData).length : 0} projects
+            </p>
+            {processingResult.budgetData && Object.keys(processingResult.budgetData).length > 0 && (
+              <div className="mt-2">
+                <h4 className="text-sm font-medium">First Budget Entry:</h4>
+                <div className="grid grid-cols-2 gap-2 mt-1">
+                  <div className="text-sm text-muted-foreground">Project:</div>
+                  <div className="text-sm font-medium">{Object.keys(processingResult.budgetData)[0]}</div>
+                  
+                  <div className="text-sm text-muted-foreground">Used Budget:</div>
+                  <div className="text-sm font-medium">
+                    {processingResult.budgetData[Object.keys(processingResult.budgetData)[0]].used}
+                  </div>
+                  
+                  <div className="text-sm text-muted-foreground">Total Budget:</div>
+                  <div className="text-sm font-medium">
+                    {processingResult.budgetData[Object.keys(processingResult.budgetData)[0]].total}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+        
+      default:
+        return (
+          <div className="mt-4 bg-destructive/20 p-4 rounded-md">
+            <h3 className="text-lg font-bold text-destructive">Unknown Document Type</h3>
+            <p className="text-sm text-muted-foreground">
+              The system couldn't determine the type of this document. Please check the format and try again.
+            </p>
+          </div>
+        );
     }
-    
-    if (lowerStatus.includes('hold') || lowerStatus.includes('pause') || lowerStatus.includes('suspend')) {
-      return 'onHold';
-    }
-    
-    if (lowerStatus.includes('risk') || lowerStatus.includes('danger') || lowerStatus.includes('issue')) {
-      return 'atRisk';
-    }
-    
-    return 'active';
-  };
-
-  const mapRiskLevel = (risk: string): 'low' | 'medium' | 'high' => {
-    if (!risk) return 'medium';
-    
-    const lowerRisk = String(risk).toLowerCase();
-    
-    if (lowerRisk.includes('high') || lowerRisk.includes('critical') || lowerRisk === '3' || lowerRisk === '4' || lowerRisk === '5') {
-      return 'high';
-    }
-    
-    if (lowerRisk.includes('low') || lowerRisk.includes('minor') || lowerRisk === '1') {
-      return 'low';
-    }
-    
-    return 'medium';
   };
   
   return (
-    <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <FileUp className="h-5 w-5 mr-2" />
-          AI Document Processing
-        </CardTitle>
-        <CardDescription>
-          Upload project documents and let AI automatically map and update your project information
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="flex flex-col space-y-2">
-          <label htmlFor="document-upload" className="text-sm font-medium">
-            Upload Document
-          </label>
-          <input
-            id="document-upload"
-            type="file"
-            className="file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 text-sm text-muted-foreground"
-            onChange={handleFileChange}
-            accept=".csv,.json,.xlsx,.xls,.txt,.md"
-            disabled={isProcessing}
-          />
-          <p className="text-sm text-muted-foreground mt-1">
-            Supported formats: CSV, JSON, Excel, Text, Markdown
-          </p>
-        </div>
-
-        {file && (
-          <div className="flex items-center space-x-2 text-sm">
-            <FileText className="h-4 w-4" />
-            <span>{file.name}</span>
-            <span className="text-muted-foreground">({Math.round(file.size / 1024)} KB)</span>
-          </div>
+    <div>
+      {/* File upload area */}
+      <div 
+        className={`border-2 border-dashed rounded-lg p-6 text-center ${
+          file ? 'border-primary' : 'border-gray-300'
+        } transition-all`}
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+      >
+        {!file && !isProcessing && (
+          <>
+            <FileText className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <h3 className="text-lg font-medium mb-2">Drag and drop your document here</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Support for CSV, JSON, Excel, Text, and Markdown files
+            </p>
+            <div className="flex justify-center">
+              <label 
+                htmlFor="file-upload" 
+                className="cursor-pointer bg-primary text-white px-4 py-2 rounded-md hover:bg-primary/90 transition-colors"
+              >
+                Browse Files
+                <input
+                  id="file-upload"
+                  type="file"
+                  className="hidden"
+                  accept=".csv,.json,.xlsx,.txt,.md"
+                  onChange={handleFileUpload}
+                />
+              </label>
+            </div>
+          </>
         )}
-
-        {isProcessing && (
-          <div className="space-y-2">
-            <Progress value={progress} className="h-2" />
-            <p className="text-center text-sm text-muted-foreground">{processingStage}</p>
-          </div>
-        )}
-
-        {result && (
-          <div className={`p-4 rounded-md ${result.success ? 'bg-green-50 text-green-800' : 'bg-red-50 text-red-800'}`}>
-            <div className="flex">
-              {result.success ? (
-                <CheckCircle className="h-5 w-5 mr-2" />
-              ) : (
-                <AlertCircle className="h-5 w-5 mr-2" />
-              )}
-              <p className="text-sm">{result.message}</p>
+        
+        {file && !isProcessing && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-center space-x-2">
+              <FileText className="h-6 w-6 text-primary" />
+              <span className="font-medium">{file.name}</span>
+            </div>
+            
+            <div className="flex justify-center space-x-3">
+              <Button
+                variant="outline"
+                onClick={() => setFile(null)}
+              >
+                Change File
+              </Button>
+              <Button
+                onClick={processFile}
+                className="bg-primary text-white hover:bg-primary/90"
+              >
+                <Sparkles className="h-4 w-4 mr-2" />
+                Process with AI
+              </Button>
             </div>
           </div>
         )}
-      </CardContent>
-      <CardFooter>
-        <Button 
-          onClick={processFile} 
-          disabled={!file || isProcessing}
-          className="w-full"
-        >
-          {isProcessing ? (
-            <>
-              <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Processing...
-            </>
-          ) : (
-            <>Process Document</>
-          )}
-        </Button>
-      </CardFooter>
-    </Card>
+        
+        {isProcessing && (
+          <div className="space-y-4">
+            <Loader2 className="animate-spin h-12 w-12 text-primary mx-auto" />
+            <h3 className="text-lg font-medium">Processing your document...</h3>
+            <Progress value={progress} className="w-full h-2" />
+            <p className="text-sm text-muted-foreground">
+              The AI is analyzing your document, extracting information, and determining how to apply it.
+            </p>
+          </div>
+        )}
+        
+        {processingResult && processingResult.documentType !== 'unknown' && (
+          <Card className="mt-4">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Check className="h-5 w-5 text-green-500" />
+                <h3 className="text-lg font-medium">Document Processed Successfully</h3>
+              </div>
+              
+              <div className="flex items-center space-x-2 p-2 bg-green-50 dark:bg-green-900/20 rounded-md">
+                <Sparkles className="h-4 w-4 text-green-500" />
+                <span className="text-sm">
+                  Detected Document Type: <strong>{getDocumentTypeLabel(processingResult.documentType)}</strong>
+                </span>
+              </div>
+              
+              {renderResultPreview()}
+            </CardContent>
+          </Card>
+        )}
+        
+        {processingResult && processingResult.documentType === 'unknown' && (
+          <Card className="mt-4 border-red-200">
+            <CardContent className="pt-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <AlertCircle className="h-5 w-5 text-red-500" />
+                <h3 className="text-lg font-medium">Processing Issue</h3>
+              </div>
+              
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 rounded-md">
+                <p className="text-sm">
+                  The system couldn't determine the type of this document. Please check that the document format is supported and try again.
+                </p>
+              </div>
+              
+              <Button
+                className="mt-4"
+                variant="outline"
+                onClick={() => setFile(null)}
+              >
+                Try Different File
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+      
+      {/* Project match dialog */}
+      <Dialog open={showMatchDialog} onOpenChange={setShowMatchDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Apply Document to Project</DialogTitle>
+            <DialogDescription>
+              {processingResult?.documentType === 'project'
+                ? 'This document contains project information. Choose which project to update:'
+                : processingResult?.documentType === 'task'
+                ? 'This document contains task data. Choose which project these tasks belong to:'
+                : 'This document contains budget information. Choose which project to apply it to:'}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="py-4">
+            {projectMatches.length > 0 ? (
+              <div className="space-y-4">
+                <p className="text-sm">Found possible project matches:</p>
+                
+                <Select
+                  value={selectedProjectId}
+                  onValueChange={setSelectedProjectId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {projectMatches.map(match => (
+                        <SelectItem key={match.projectId} value={match.projectId}>
+                          {match.name} ({(match.similarity * 100).toFixed(0)}% match)
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <div className="p-3 bg-orange-50 dark:bg-orange-900/20 rounded-md">
+                <p className="text-sm">
+                  No matching projects found. You can create a new project or select an existing one.
+                </p>
+              </div>
+            )}
+            
+            {processingResult?.documentType === 'project' && (
+              <div className="mt-4">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsCreatingNewProject(true)} 
+                  className="w-full"
+                >
+                  Create as New Project
+                </Button>
+              </div>
+            )}
+            
+            {(processingResult?.documentType === 'task' || processingResult?.documentType === 'budget') && projectMatches.length === 0 && (
+              <div className="mt-4">
+                <p className="text-sm font-medium mb-2">Select an existing project:</p>
+                <Select
+                  value={selectedProjectId}
+                  onValueChange={setSelectedProjectId}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a project" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      {projects.map(project => (
+                        <SelectItem key={project.id} value={project.id}>
+                          {project.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowMatchDialog(false);
+                setFile(null);
+                setProcessingResult(null);
+              }}
+            >
+              Cancel
+            </Button>
+            
+            {isCreatingNewProject ? (
+              <Button onClick={handleCreateNewProject}>
+                Create New Project
+              </Button>
+            ) : (
+              <Button
+                disabled={!selectedProjectId && projectMatches.length > 0}
+                onClick={handleApplyToProject}
+              >
+                Apply to Project
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
-};
+}

@@ -7,19 +7,13 @@ import { useProjectManagement } from '@/hooks/useProjectManagement';
 export default function ProjectsPage() {
   const { 
     projects, 
-    handleDownloadTemplate, 
-    handleBudgetImport, 
-    handleDownloadBudgetTemplate, 
-    handleImportProjects 
+    handleDownloadTemplate,
   } = useProjectManagement();
 
   return (
     <div className="space-y-6">
       <ProjectsHeader
         handleDownloadTemplate={handleDownloadTemplate}
-        handleImportProjects={handleImportProjects}
-        handleBudgetImport={handleBudgetImport}
-        handleDownloadBudgetTemplate={handleDownloadBudgetTemplate}
       />
       <ProjectsList projects={projects} />
     </div>

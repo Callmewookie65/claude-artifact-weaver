@@ -1,47 +1,34 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus, Filter, ArrowUpDown, Download } from 'lucide-react';
-import { ProjectCSVImport } from '@/components/projects/ProjectCSVImport';
-import { BudgetCSVImport } from '@/components/projects/BudgetCSVImport';
-import { ProjectData } from '@/types/project';
+import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 interface ProjectsHeaderProps {
   handleDownloadTemplate: () => void;
-  handleImportProjects: (importedProjects: ProjectData[]) => void;
-  handleBudgetImport: (budgetMap: Record<string, { used: number; total: number }>) => void;
-  handleDownloadBudgetTemplate: () => void;
 }
 
 export const ProjectsHeader: React.FC<ProjectsHeaderProps> = ({
   handleDownloadTemplate,
-  handleImportProjects,
-  handleBudgetImport,
-  handleDownloadBudgetTemplate
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-      <h1 className="text-2xl font-bold">Projects</h1>
+    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div>
+        <h1 className="text-3xl font-bold bg-gradient-custom">Projects</h1>
+        <p className="text-muted-foreground">Manage your project portfolio</p>
+      </div>
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline">
-          <Filter className="h-4 w-4 mr-2" />
-          Filter
+        <Button
+          onClick={handleDownloadTemplate}
+          variant="outline"
+          className="hover:bg-accent"
+        >
+          Download Template
         </Button>
-        <Button variant="outline">
-          <ArrowUpDown className="h-4 w-4 mr-2" />
-          Sort
-        </Button>
-        <ProjectCSVImport 
-          onImport={handleImportProjects} 
-          onDownloadTemplate={handleDownloadTemplate} 
-        />
-        <BudgetCSVImport 
-          onImport={handleBudgetImport}
-          onDownloadTemplate={handleDownloadBudgetTemplate}
-        />
-        <Button>
-          <Plus className="h-4 w-4 mr-2" />
-          New Project
+        <Button asChild className="bg-black hover:bg-black/90">
+          <Link to="/ai/tools">
+            <Plus className="mr-2 h-4 w-4" /> New Project
+          </Link>
         </Button>
       </div>
     </div>

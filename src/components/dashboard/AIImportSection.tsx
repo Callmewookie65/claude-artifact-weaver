@@ -1,12 +1,15 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { AIDocumentProcessor } from '@/components/import/AIDocumentProcessor';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { ProjectData } from '@/types/project';
 import { useProjectManagement } from '@/hooks/useProjectManagement';
-import { FileUp } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
+import { ProjectsContext } from '@/components/providers/ProjectsProvider';
+import { toast } from '@/hooks/use-toast';
 
 export const AIImportSection: React.FC = () => {
+  const { projects } = useContext(ProjectsContext);
   const { 
     handleImportProjects, 
     handleBudgetImport
@@ -21,11 +24,9 @@ export const AIImportSection: React.FC = () => {
     // This would typically call a function to import tasks into the system
     // For now we just show a toast since task management is not fully implemented
     
-    import('@/hooks/use-toast').then(({ toast }) => {
-      toast({
-        title: "Tasks Imported",
-        description: `${tasks.length} tasks have been imported. Task management implementation is in progress.`
-      });
+    toast({
+      title: "Tasks Imported",
+      description: `${tasks.length} tasks have been imported. Task management implementation is in progress.`
     });
   };
   
@@ -35,7 +36,7 @@ export const AIImportSection: React.FC = () => {
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center">
-            <FileUp className="h-5 w-5 mr-2" />
+            <Sparkles className="h-5 w-5 mr-2" />
             Smart Document Import
           </CardTitle>
           <CardDescription>
@@ -58,6 +59,7 @@ export const AIImportSection: React.FC = () => {
             onProjectUpdate={handleProjectUpdate}
             onBudgetUpdate={handleBudgetImport}
             onTasksImport={handleTasksImport}
+            projects={projects}
           />
         </CardContent>
       </Card>
