@@ -1,4 +1,3 @@
-
 import React, { useState, useContext } from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
@@ -11,6 +10,7 @@ import { DashboardTeam } from '@/components/dashboard/DashboardTeam';
 import { BudgetCSVImport } from '@/components/projects/BudgetCSVImport';
 import { generateBudgetTemplate, updateProjectBudgets } from '@/utils/csvExport';
 import { toast } from '@/hooks/use-toast';
+import { AIImportSection } from '@/components/dashboard/AIImportSection';
 
 const Dashboard = () => {
   const { projects, setProjects } = useContext(ProjectsContext);
@@ -64,6 +64,8 @@ const Dashboard = () => {
           </Button>
         </div>
       </div>
+
+      <AIImportSection />
 
       <DashboardStats projects={projects} />
       <DashboardTabs projects={projects} sortBy={sortBy} />
