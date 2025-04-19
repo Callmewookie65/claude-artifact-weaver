@@ -1,4 +1,3 @@
-
 import { ProjectData } from '@/types/project';
 import { mapValueToEnum, cleanTextForComparison, calculateStringSimilarity, extractNumberValue, extractDateValue } from '@/utils/mappingUtils';
 import { toast } from '@/hooks/use-toast';
@@ -171,10 +170,20 @@ export class DocumentProcessingService {
       };
     }
     
+    // If content is not an array or is empty, check if it's already in a compatible format
+    if (content && typeof content === 'object') {
+      return {
+        documentType: 'project',
+        confidence: 0.5,
+        projectData: content as Partial<ProjectData>
+      };
+    }
+    
+    // Return minimal result if we couldn't extract project data
     return {
       documentType: 'project',
-      confidence: 0.5,
-      projectData: content // Assume it's already in the right format if not array
+      confidence: 0.3,
+      projectData: {}
     };
   }
   
@@ -515,7 +524,7 @@ export class DocumentProcessingService {
         confidence: 0.9,
         budgetData: budgetMap,
         possibleProjects: Object.keys(budgetMap).map(name => ({
-          id: '', // Will be filled by UI
+          id: '', // Will be filled by UI when matching
           name,
           similarity: 1.0
         }))
